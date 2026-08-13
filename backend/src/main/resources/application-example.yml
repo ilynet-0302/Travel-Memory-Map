@@ -1,0 +1,15 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/travel_memory
+    username: travel_memory
+    password: change-me
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://your-project.supabase.co/auth/v1
+          jwk-set-uri: https://your-project.supabase.co/auth/v1/.well-known/jwks.json
+
+app:
+  cors:
+    allowed-origins: http://localhost:5173,https://username.github.io
