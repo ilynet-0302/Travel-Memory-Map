@@ -5,6 +5,7 @@ import {
   Globe2,
   LayoutDashboard,
   Map,
+  Scale,
   LogOut,
   Plus,
   Settings,
@@ -17,6 +18,7 @@ import { useProfile } from '../../features/profile/hooks/useProfile';
 const primaryNavigation = [
   { label: 'Overview', to: '/', icon: LayoutDashboard, end: true },
   { label: 'My trips', to: '/trips', icon: Compass },
+  { label: 'Compare trips', to: '/compare', icon: Scale },
   { label: 'World map', to: '/map', icon: Map },
   { label: 'Memories', to: '/memories', icon: GalleryHorizontalEnd },
 ];

@@ -35,7 +35,7 @@ public class TripRatingController {
     public TripRatingSummaryResponse rate(
             @PathVariable UUID tripId,
             @Valid @RequestBody UpsertTripRatingRequest request) {
-        return tripRatingService.rate(tripId, request.score());
+        return tripRatingService.rate(tripId, request);
     }
 
     @DeleteMapping

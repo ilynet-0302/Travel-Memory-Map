@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ratingsApi } from '../api/ratingsApi';
+import type { TripRatingInput } from '../types';
 
 export const ratingKeys = {
   summary: (tripId: string) => ['trip-rating', tripId] as const,
@@ -15,7 +16,7 @@ export function useTripRating(tripId: string) {
 export function useRateTrip(tripId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (score: number) => ratingsApi.rate(tripId, score),
+    mutationFn: (rating: TripRatingInput) => ratingsApi.rate(tripId, rating),
     onSuccess: async (summary) => {
       queryClient.setQueryData(ratingKeys.summary(tripId), summary);
       await queryClient.invalidateQueries({ queryKey: ['profile'] });

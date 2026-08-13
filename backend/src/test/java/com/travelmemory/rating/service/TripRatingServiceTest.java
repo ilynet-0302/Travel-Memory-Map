@@ -4,7 +4,9 @@ import com.travelmemory.auth.AuthenticatedUser;
 import com.travelmemory.auth.AuthenticatedUserProvider;
 import com.travelmemory.membership.service.TripPermissionService;
 import com.travelmemory.rating.dto.TripRatingSummaryResponse;
+import com.travelmemory.rating.dto.UpsertTripRatingRequest;
 import com.travelmemory.rating.entity.TripRating;
+import com.travelmemory.rating.entity.WouldReturn;
 import com.travelmemory.rating.repository.TripRatingRepository;
 import com.travelmemory.trip.entity.Trip;
 import com.travelmemory.trip.entity.TripVisibility;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -65,24 +68,28 @@ class TripRatingServiceTest {
     }
 
     @Test
-    void summaryRoundsTheAverageAndIncludesTheCurrentMemberScore() {
+    void summaryRoundsAveragesAndIncludesTheCurrentMembersDetails() {
         TripRating ownRating = new TripRating(trip, owner, 9);
-        when(ratingRepository.findByTripIdAndUserId(trip.getId(), owner.getId()))
-                .thenReturn(Optional.of(ownRating));
-        when(ratingRepository.averageScoreByTripId(trip.getId())).thenReturn(8.666666);
-        when(ratingRepository.countByTripId(trip.getId())).thenReturn(3L);
+        TripRating otherOne = new TripRating(
+                trip, new UserProfile(UUID.randomUUID(), "one@example.com", "One"), 8);
+        TripRating otherTwo = new TripRating(
+                trip, new UserProfile(UUID.randomUUID(), "two@example.com", "Two"), 9);
+        when(ratingRepository.findByTripId(trip.getId()))
+                .thenReturn(List.of(ownRating, otherOne, otherTwo));
 
         TripRatingSummaryResponse response = service.summary(trip.getId());
 
         assertThat(response.averageScore()).isEqualByComparingTo("8.7");
         assertThat(response.ratingCount()).isEqualTo(3);
-        assertThat(response.currentUserScore()).isEqualTo(9);
+        assertThat(response.currentUserRating().overallScore()).isEqualTo(9);
+        assertThat(response.averages().food()).isEqualByComparingTo("8.7");
+        assertThat(response.returnIntent().maybe()).isEqualTo(3);
         assertThat(response.canRate()).isTrue();
         verify(permissionService).requireViewAccess(trip, owner.getId());
     }
 
     @Test
-    void rateCreatesOneRatingForTheCurrentTripMember() {
+    void rateCreatesOneDetailedRatingAndComputesOverallScore() {
         AtomicReference<TripRating> saved = new AtomicReference<>();
         when(ratingRepository.findByTripIdAndUserId(trip.getId(), owner.getId()))
                 .thenAnswer(invocation -> Optional.ofNullable(saved.get()));
@@ -91,13 +98,15 @@ class TripRatingServiceTest {
             saved.set(rating);
             return rating;
         });
-        when(ratingRepository.averageScoreByTripId(trip.getId())).thenReturn(10.0);
-        when(ratingRepository.countByTripId(trip.getId())).thenReturn(1L);
+        when(ratingRepository.findByTripId(trip.getId()))
+                .thenAnswer(invocation -> saved.get() == null ? List.of() : List.of(saved.get()));
 
-        TripRatingSummaryResponse response = service.rate(trip.getId(), 10);
+        TripRatingSummaryResponse response = service.rate(trip.getId(), detailedRating());
 
-        assertThat(saved.get().getScore()).isEqualTo(10);
-        assertThat(response.currentUserScore()).isEqualTo(10);
+        assertThat(saved.get().getScore()).isEqualTo(8);
+        assertThat(saved.get().getCulture()).isEqualTo(10);
+        assertThat(saved.get().getWouldReturn()).isEqualTo(WouldReturn.YES);
+        assertThat(response.currentUserRating().overallScore()).isEqualTo(8);
         verify(permissionService).requireMember(trip, owner.getId());
         verify(ratingRepository).save(saved.get());
     }
@@ -107,12 +116,12 @@ class TripRatingServiceTest {
         TripRating existing = new TripRating(trip, owner, 4);
         when(ratingRepository.findByTripIdAndUserId(trip.getId(), owner.getId()))
                 .thenReturn(Optional.of(existing));
-        when(ratingRepository.averageScoreByTripId(trip.getId())).thenReturn(7.0);
-        when(ratingRepository.countByTripId(trip.getId())).thenReturn(2L);
+        when(ratingRepository.findByTripId(trip.getId())).thenReturn(List.of(existing));
 
-        service.rate(trip.getId(), 7);
+        service.rate(trip.getId(), detailedRating());
 
-        assertThat(existing.getScore()).isEqualTo(7);
+        assertThat(existing.getScore()).isEqualTo(8);
+        assertThat(existing.getNightlife()).isEqualTo(7);
         verify(ratingRepository).save(existing);
     }
 
@@ -126,5 +135,9 @@ class TripRatingServiceTest {
 
         verify(permissionService).requireMember(trip, owner.getId());
         verify(ratingRepository).delete(existing);
+    }
+
+    private UpsertTripRatingRequest detailedRating() {
+        return new UpsertTripRatingRequest(9, 7, 10, 8, 8, 8, 6, 9, WouldReturn.YES);
     }
 }

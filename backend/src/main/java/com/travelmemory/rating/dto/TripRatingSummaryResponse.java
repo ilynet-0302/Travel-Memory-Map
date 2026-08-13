@@ -5,6 +5,8 @@ import java.math.BigDecimal;
 public record TripRatingSummaryResponse(
         BigDecimal averageScore,
         long ratingCount,
-        Integer currentUserScore,
+        TripRatingResponse currentUserRating,
+        TripRatingBreakdownResponse averages,
+        ReturnIntentSummaryResponse returnIntent,
         boolean canRate) {
 }

@@ -1,4 +1,4 @@
-import { Compass, Plus, Search, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeftRight, Compass, Plus, Search, SlidersHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TripCard } from '../features/trips/components/TripCard';
@@ -31,9 +31,10 @@ export function TripsPage() {
           <h1>My trips</h1>
           <p>Every pin has a story attached to it.</p>
         </div>
-        <Link className="button button--coral" to="/?create=1">
-          <Plus size={18} /> New trip
-        </Link>
+        <div className="page-header__actions">
+          <Link className="button button--ghost" to="/compare"><ArrowLeftRight size={17} /> Compare</Link>
+          <Link className="button button--coral" to="/?create=1"><Plus size={18} /> New trip</Link>
+        </div>
       </header>
 
       <div className="trip-toolbar">

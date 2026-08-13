@@ -1,7 +1,12 @@
 package com.travelmemory.rating.controller;
 
 import com.travelmemory.config.SecurityConfig;
+import com.travelmemory.rating.dto.ReturnIntentSummaryResponse;
+import com.travelmemory.rating.dto.TripRatingBreakdownResponse;
+import com.travelmemory.rating.dto.TripRatingResponse;
 import com.travelmemory.rating.dto.TripRatingSummaryResponse;
+import com.travelmemory.rating.dto.UpsertTripRatingRequest;
+import com.travelmemory.rating.entity.WouldReturn;
 import com.travelmemory.rating.service.TripRatingService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,31 +53,61 @@ class TripRatingControllerWebTest {
     @Test
     void authenticatedMemberCanRateATrip() throws Exception {
         UUID tripId = UUID.randomUUID();
-        when(tripRatingService.rate(tripId, 9))
-                .thenReturn(new TripRatingSummaryResponse(new BigDecimal("8.7"), 3, 9, true));
+        UpsertTripRatingRequest request = new UpsertTripRatingRequest(
+                9, 7, 10, 8, 8, 8, 6, 9, WouldReturn.YES);
+        when(tripRatingService.rate(tripId, request))
+                .thenReturn(new TripRatingSummaryResponse(
+                        new BigDecimal("8.7"),
+                        3,
+                        new TripRatingResponse(8, 9, 7, 10, 8, 8, 8, 6, 9, WouldReturn.YES),
+                        new TripRatingBreakdownResponse(
+                                new BigDecimal("8.3"), new BigDecimal("7.7"), new BigDecimal("9.3"),
+                                new BigDecimal("8.0"), new BigDecimal("8.7"), new BigDecimal("8.0"),
+                                new BigDecimal("6.7"), new BigDecimal("8.7")),
+                        new ReturnIntentSummaryResponse(2, 1, 0),
+                        true));
 
         mockMvc.perform(put("/api/v1/trips/{tripId}/rating", tripId)
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":9}"))
+                        .content(validRequestJson(9)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.averageScore").value(8.7))
                 .andExpect(jsonPath("$.ratingCount").value(3))
-                .andExpect(jsonPath("$.currentUserScore").value(9))
+                .andExpect(jsonPath("$.currentUserRating.overallScore").value(8))
+                .andExpect(jsonPath("$.currentUserRating.culture").value(10))
+                .andExpect(jsonPath("$.averages.food").value(8.3))
+                .andExpect(jsonPath("$.returnIntent.yes").value(2))
                 .andExpect(jsonPath("$.canRate").value(true));
     }
 
     @Test
-    void scoreOutsideTheOneToTenRangeIsRejectedBeforeTheService() throws Exception {
+    void dimensionOutsideTheOneToTenRangeIsRejectedBeforeTheService() throws Exception {
         UUID tripId = UUID.randomUUID();
 
         mockMvc.perform(put("/api/v1/trips/{tripId}/rating", tripId)
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"score\":11}"))
+                        .content(validRequestJson(11)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
 
-        verify(tripRatingService, never()).rate(any(), any(Integer.class));
+        verify(tripRatingService, never()).rate(any(), any(UpsertTripRatingRequest.class));
+    }
+
+    private String validRequestJson(int food) {
+        return """
+                {
+                  "food": %d,
+                  "nightlife": 7,
+                  "culture": 10,
+                  "nature": 8,
+                  "walkability": 8,
+                  "valueForMoney": 8,
+                  "crowds": 6,
+                  "relaxation": 9,
+                  "wouldReturn": "YES"
+                }
+                """.formatted(food);
     }
 }
