@@ -3,12 +3,14 @@ import {
   CalendarDays,
   Camera,
   Check,
+  CircleDollarSign,
   Flag,
   Globe2,
   MapPin,
   PlaneTakeoff,
   Route,
   Sparkles,
+  Trophy,
 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -60,6 +62,10 @@ export function ProfilePage() {
   }
 
   const { statistics } = profile.data;
+  const { personality } = profile.data;
+  const personalityScores = Object.entries(personality.scores)
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 5);
   const stats = [
     { label: 'Countries', value: statistics.countriesVisited, icon: Flag, tone: 'sage' },
     { label: 'Cities', value: statistics.citiesVisited, icon: MapPin, tone: 'coral' },
@@ -105,8 +111,8 @@ export function ProfilePage() {
             <Sparkles size={18} />
             <div>
               <small>TRAVEL PERSONALITY</small>
-              <strong>Still taking shape</strong>
-              <p>Complete more trips to reveal your deterministic Travel DNA.</p>
+              <strong>{personality.type}</strong>
+              <p>{personality.description}</p>
             </div>
           </div>
         </article>
@@ -138,6 +144,25 @@ export function ProfilePage() {
         </article>
       </section>
 
+      <section className="profile-dna-section">
+        <article className="profile-dna-copy">
+          <span className="eyebrow">YOUR TRAVEL DNA</span>
+          <h2>{personality.revealed ? personality.type : 'A personality in progress'}</h2>
+          <p>{personality.description}</p>
+          <span className="profile-dna-progress">
+            <Sparkles size={14} /> {personality.completedTrips} / {personality.completedTripsRequired} completed trips
+          </span>
+        </article>
+        <div className="profile-dna-scores">
+          {personalityScores.map(([trait, score]) => (
+            <div key={trait}>
+              <span><strong>{trait}</strong><em>{score}%</em></span>
+              <i><b style={{ width: `${score}%` }} /></i>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="profile-stats-section">
         <div className="section-heading">
           <div>
@@ -154,6 +179,35 @@ export function ProfilePage() {
               <span className="stat-card__label">{label}</span>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="profile-analytics-section">
+        <div className="section-heading">
+          <div><span className="eyebrow">TRAVEL INTELLIGENCE</span><h2>Patterns across your journeys</h2></div>
+          <small>Ratings and currencies are never mixed into misleading totals.</small>
+        </div>
+        <div className="profile-analytics-grid">
+          {statistics.spending.map((spending) => (
+            <article className="profile-spending-card" key={spending.currency}>
+              <span className="profile-analytics-icon"><CircleDollarSign size={19} /></span>
+              <small>TOTAL SPENT · {spending.currency}</small>
+              <strong>{new Intl.NumberFormat('en', { style: 'currency', currency: spending.currency }).format(spending.totalSpent)}</strong>
+              <div><span>Per trip <b>{new Intl.NumberFormat('en', { style: 'currency', currency: spending.currency }).format(spending.averageCostPerTrip)}</b></span><span>Per day <b>{new Intl.NumberFormat('en', { style: 'currency', currency: spending.currency }).format(spending.averageCostPerDay)}</b></span></div>
+              <p>Highest: {spending.mostExpensiveTrip.title}</p>
+            </article>
+          ))}
+          <article className="profile-highlights-card">
+            <span className="profile-analytics-icon profile-analytics-icon--coral"><Trophy size={19} /></span>
+            <small>JOURNEY HIGHLIGHTS</small>
+            <dl>
+              <div><dt>Favourite country</dt><dd>{statistics.favouriteCountry?.name ?? 'Add trip ratings'}</dd></div>
+              <div><dt>Favourite city</dt><dd>{statistics.favouriteCity?.name ?? 'Add trip ratings'}</dd></div>
+              <div><dt>Most visited</dt><dd>{statistics.mostVisitedCountry?.name ?? 'No journeys yet'}</dd></div>
+              <div><dt>Longest trip</dt><dd>{statistics.longestTrip ? `${statistics.longestTrip.title} · ${statistics.longestTrip.travelDays} days` : 'No completed trips'}</dd></div>
+              <div><dt>Shortest trip</dt><dd>{statistics.shortestTrip ? `${statistics.shortestTrip.title} · ${statistics.shortestTrip.travelDays} days` : 'No completed trips'}</dd></div>
+            </dl>
+          </article>
         </div>
       </section>
     </div>

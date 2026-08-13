@@ -2,6 +2,7 @@ package com.travelmemory.user.service;
 
 import com.travelmemory.auth.AuthenticatedUser;
 import com.travelmemory.auth.AuthenticatedUserProvider;
+import com.travelmemory.dna.service.TravelDnaService;
 import com.travelmemory.statistics.service.TravelStatisticsService;
 import com.travelmemory.user.dto.UpdateUserProfileRequest;
 import com.travelmemory.user.dto.UserProfileResponse;
@@ -16,14 +17,17 @@ public class UserProfileService {
     private final UserProfileRepository userProfileRepository;
     private final AuthenticatedUserProvider authenticatedUserProvider;
     private final TravelStatisticsService travelStatisticsService;
+    private final TravelDnaService travelDnaService;
 
     public UserProfileService(
             UserProfileRepository userProfileRepository,
             AuthenticatedUserProvider authenticatedUserProvider,
-            TravelStatisticsService travelStatisticsService) {
+            TravelStatisticsService travelStatisticsService,
+            TravelDnaService travelDnaService) {
         this.userProfileRepository = userProfileRepository;
         this.authenticatedUserProvider = authenticatedUserProvider;
         this.travelStatisticsService = travelStatisticsService;
+        this.travelDnaService = travelDnaService;
     }
 
     @Transactional
@@ -71,6 +75,7 @@ public class UserProfileService {
                 profile.getAvatarUrl(),
                 profile.getCreatedAt(),
                 profile.getUpdatedAt(),
-                travelStatisticsService.calculateFor(profile.getId()));
+                travelStatisticsService.calculateFor(profile.getId()),
+                travelDnaService.personalityFor(profile.getId()));
     }
 }

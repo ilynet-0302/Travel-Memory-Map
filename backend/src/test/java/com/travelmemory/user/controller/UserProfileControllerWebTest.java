@@ -1,6 +1,8 @@
 package com.travelmemory.user.controller;
 
 import com.travelmemory.config.SecurityConfig;
+import com.travelmemory.dna.dto.TravelDnaScoresResponse;
+import com.travelmemory.dna.dto.TravelPersonalityResponse;
 import com.travelmemory.statistics.dto.TravelStatisticsResponse;
 import com.travelmemory.user.dto.UpdateUserProfileRequest;
 import com.travelmemory.user.dto.UserProfileResponse;
@@ -18,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -95,6 +98,11 @@ class UserProfileControllerWebTest {
                 null,
                 now.minusYears(1),
                 now,
-                new TravelStatisticsResponse(3, 5, 4, 3, 18, 42, 24));
+                new TravelStatisticsResponse(
+                        3, 5, 4, 3, 18, 42, 24,
+                        List.of(), null, null, null, null, null),
+                new TravelPersonalityResponse(
+                        "Urban Explorer", "Varied routes lead the way.", true, 3, 3,
+                        new TravelDnaScoresResponse(82, 60, 50, 20, 30, 45, 55)));
     }
 }

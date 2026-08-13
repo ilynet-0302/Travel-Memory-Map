@@ -16,7 +16,10 @@ export function useRateTrip(tripId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (score: number) => ratingsApi.rate(tripId, score),
-    onSuccess: (summary) => queryClient.setQueryData(ratingKeys.summary(tripId), summary),
+    onSuccess: async (summary) => {
+      queryClient.setQueryData(ratingKeys.summary(tripId), summary);
+      await queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
   });
 }
 
@@ -24,6 +27,11 @@ export function useRemoveTripRating(tripId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => ratingsApi.remove(tripId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ratingKeys.summary(tripId) }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ratingKeys.summary(tripId) }),
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
+      ]);
+    },
   });
 }

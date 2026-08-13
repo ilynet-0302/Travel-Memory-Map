@@ -1,5 +1,6 @@
 package com.travelmemory.user.dto;
 
+import com.travelmemory.dna.dto.TravelPersonalityResponse;
 import com.travelmemory.statistics.dto.TravelStatisticsResponse;
 
 import java.time.OffsetDateTime;
@@ -12,5 +13,6 @@ public record UserProfileResponse(
         String avatarUrl,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
-        TravelStatisticsResponse statistics) {
+        TravelStatisticsResponse statistics,
+        TravelPersonalityResponse personality) {
 }

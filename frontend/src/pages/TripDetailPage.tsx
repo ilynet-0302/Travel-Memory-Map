@@ -19,6 +19,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AvatarStack } from '../components/ui/AvatarStack';
 import { TripMembersPanel } from '../features/collaboration/components/TripMembersPanel';
+import { TripDnaPanel } from '../features/dna/components/TripDnaPanel';
 import { ExpensesPanel } from '../features/expenses/components/ExpensesPanel';
 import { TripMap } from '../features/map/components/TripMap';
 import { PhotosPanel } from '../features/photos/components/PhotosPanel';
@@ -311,6 +312,7 @@ export function TripDetailPage() {
             <article><span className="insight-icon insight-icon--sage"><CircleDollarSign size={19} /></span><span><small>TRIP BUDGET</small><strong>€{trip.spent}</strong></span></article>
             <TripRatingCard tripId={trip.id} />
           </section>
+          <TripDnaPanel tripId={trip.id} />
         </>
       ) : activeTab === 'Photos' ? (
         <PhotosPanel trip={trip} stops={trip.stops} />

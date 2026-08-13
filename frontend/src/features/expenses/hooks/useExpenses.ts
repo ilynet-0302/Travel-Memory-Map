@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { dnaKeys } from '../../dna/hooks/useDna';
 import { tripKeys } from '../../trips/hooks/useTrips';
 import { expensesApi } from '../api/expensesApi';
 import type { ExpenseInput } from '../types';
@@ -18,6 +19,7 @@ function useRefreshExpenses(tripId: string) {
       queryClient.invalidateQueries({ queryKey: expenseKeys.overview(tripId) }),
       queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
       queryClient.invalidateQueries({ queryKey: ['profile'] }),
+      queryClient.invalidateQueries({ queryKey: dnaKeys.trip(tripId) }),
     ]);
   };
 }
@@ -46,4 +48,3 @@ export function useDeleteExpense(tripId: string) {
     onSuccess: refresh,
   });
 }
-

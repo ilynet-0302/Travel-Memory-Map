@@ -18,6 +18,33 @@ let demoProfile: UserProfile = {
     placesVisited: 10,
     photosUploaded: 0,
     travelDays: 19,
+    spending: [{
+      currency: 'EUR',
+      totalSpent: 1460,
+      averageCostPerTrip: 486.67,
+      averageCostPerDay: 76.84,
+      mostExpensiveTrip: { tripId: 'rome-2026', title: 'Roman Holiday', amount: 742 },
+      cheapestTrip: { tripId: 'budapest-2026', title: 'Budapest Weekend', amount: 298 },
+    }],
+    favouriteCountry: { name: 'Italy', tripCount: 1, averageRating: 9.2 },
+    favouriteCity: { name: 'Rome', tripCount: 1, averageRating: 9.2 },
+    mostVisitedCountry: { name: 'Italy', tripCount: 1, averageRating: 9.2 },
+    longestTrip: {
+      tripId: 'corfu-2025', title: 'Corfu Escape', country: 'Greece', city: 'Corfu',
+      startDate: '2025-08-17', endDate: '2025-08-23', travelDays: 7,
+    },
+    shortestTrip: {
+      tripId: 'budapest-2026', title: 'Budapest Weekend', country: 'Hungary', city: 'Budapest',
+      startDate: '2026-05-03', endDate: '2026-05-06', travelDays: 4,
+    },
+  },
+  personality: {
+    type: 'Still taking shape',
+    description: 'Complete more journeys to reveal your travel personality.',
+    revealed: false,
+    completedTrips: 2,
+    completedTripsRequired: 3,
+    scores: { explorer: 82, foodie: 71, culture: 64, nightlife: 20, relaxation: 34, nature: 41, adventure: 57 },
   },
 };
 
