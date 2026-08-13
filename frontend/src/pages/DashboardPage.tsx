@@ -15,16 +15,11 @@ import { CreateTripDialog } from '../features/trips/components/CreateTripDialog'
 import { TripCard } from '../features/trips/components/TripCard';
 import { useTrips } from '../features/trips/hooks/useTrips';
 import type { Trip } from '../features/trips/types';
-
-const stats = [
-  { label: 'Countries', value: '12', note: '+3 this year', icon: Globe2, tone: 'sage' },
-  { label: 'Cities', value: '31', note: 'Across 8 trips', icon: MapPin, tone: 'coral' },
-  { label: 'Travel days', value: '47', note: '8 more planned', icon: Clock3, tone: 'sand' },
-  { label: 'Memories', value: '427', note: 'Photos & notes', icon: Camera, tone: 'blue' },
-];
+import { useProfile } from '../features/profile/hooks/useProfile';
 
 export function DashboardPage() {
   const { data: trips = [], isLoading } = useTrips();
+  const profile = useProfile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [createdTrip, setCreatedTrip] = useState<Trip | null>(null);
   const dialogOpen = searchParams.get('create') === '1';
@@ -38,13 +33,24 @@ export function DashboardPage() {
 
   const featuredTrip = trips.find(({ id }) => id === 'rome-2026') ?? trips[0];
   const recentTrips = trips.filter(({ id }) => id !== featuredTrip?.id).slice(0, 2);
+  const statistics = profile.data?.statistics;
+  const stats = [
+    { label: 'Countries', value: statistics?.countriesVisited ?? 0, note: 'Unique countries', icon: Globe2, tone: 'sage' },
+    { label: 'Cities', value: statistics?.citiesVisited ?? 0, note: `Across ${statistics?.trips ?? 0} trips`, icon: MapPin, tone: 'coral' },
+    { label: 'Travel days', value: statistics?.travelDays ?? 0, note: `${statistics?.completedTrips ?? 0} completed`, icon: Clock3, tone: 'sand' },
+    { label: 'Places', value: statistics?.placesVisited ?? 0, note: 'Stops on your map', icon: Camera, tone: 'blue' },
+  ];
+  const displayName = profile.data?.displayName.split(/\s+/)[0] ?? 'Traveller';
+  const today = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+    .format(new Date())
+    .toUpperCase();
 
   return (
     <div className="page page--dashboard">
       <header className="page-header">
         <div>
-          <span className="eyebrow">TUESDAY · 11 AUGUST</span>
-          <h1>Good evening, Iliya <span aria-hidden="true">✦</span></h1>
+          <span className="eyebrow">{today}</span>
+          <h1>Welcome back, {displayName} <span aria-hidden="true">✦</span></h1>
           <p>Your next story is closer than you think.</p>
         </div>
         <button className="button button--coral page-header__action" type="button" onClick={() => setSearchParams({ create: '1' })}>

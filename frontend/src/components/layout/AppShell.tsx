@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../../features/auth/context/AuthContext';
+import { useProfile } from '../../features/profile/hooks/useProfile';
 
 const primaryNavigation = [
   { label: 'Overview', to: '/', icon: LayoutDashboard, end: true },
@@ -38,7 +39,15 @@ function Brand() {
 
 export function AppShell() {
   const { demoMode, session, signOut } = useAuth();
-  const displayEmail = session?.user.email ?? 'Demo traveller';
+  const profile = useProfile();
+  const displayEmail = profile.data?.email ?? session?.user.email ?? 'Demo traveller';
+  const displayName = profile.data?.displayName ?? (demoMode ? 'Iliya Petrov' : displayEmail);
+  const avatarInitials = displayName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'TM';
 
   return (
     <div className="app-shell">
@@ -79,10 +88,10 @@ export function AppShell() {
             New trip
           </NavLink>
           <div className="profile-chip">
-            <span className="avatar avatar--ilia">IP</span>
+            <span className="avatar avatar--ilia">{avatarInitials}</span>
             <span>
-              <strong>{demoMode ? 'Iliya Petrov' : displayEmail}</strong>
-              <small>{demoMode ? 'Urban explorer' : 'Signed in traveller'}</small>
+              <strong>{displayName}</strong>
+              <small>{profile.data ? `${profile.data.statistics.trips} trips · ${profile.data.statistics.countriesVisited} countries` : 'Signed in traveller'}</small>
             </span>
             {demoMode ? (
               <Sparkles size={15} aria-label="Travel profile active" />
@@ -97,7 +106,7 @@ export function AppShell() {
 
       <div className="mobile-header">
         <Brand />
-        <span className="avatar avatar--ilia">IP</span>
+        <span className="avatar avatar--ilia">{avatarInitials}</span>
       </div>
 
       <main className="main-content">

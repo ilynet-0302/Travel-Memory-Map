@@ -9,6 +9,7 @@ import { TripsPage } from '../../pages/TripsPage';
 const LoginPage = lazy(() => import('../../pages/LoginPage').then((module) => ({ default: module.LoginPage })));
 const TripDetailPage = lazy(() => import('../../pages/TripDetailPage').then((module) => ({ default: module.TripDetailPage })));
 const JoinTripPage = lazy(() => import('../../pages/JoinTripPage').then((module) => ({ default: module.JoinTripPage })));
+const ProfilePage = lazy(() => import('../../pages/ProfilePage').then((module) => ({ default: module.ProfilePage })));
 
 function PageLoader() {
   return <div className="auth-loading"><span className="auth-loading__mark">◎</span><span>Unfolding the map…</span></div>;
@@ -46,16 +47,7 @@ export function AppRouter() {
                   />
                 }
               />
-              <Route
-                path="profile"
-                element={
-                  <PlaceholderPage
-                    eyebrow="Travel profile"
-                    title="Your travel DNA is taking shape"
-                    description="Statistics and a deterministic travel personality will be calculated from completed trips."
-                  />
-                }
-              />
+              <Route path="profile" element={<ProfilePage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Route>

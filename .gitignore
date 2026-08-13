@@ -15,6 +15,7 @@ frontend/*.log
 backend/target/
 backend/.idea/
 backend/*.iml
+backend/*.log
 
 # OS / editors
 .DS_Store
