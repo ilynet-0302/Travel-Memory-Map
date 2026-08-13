@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Travel Memory Map</title>
+    <script>
+      (function () {
+        var parts = window.location.pathname.split('/').filter(Boolean);
+        var repository = parts.shift();
+        var route = '/' + parts.join('/') + window.location.search + window.location.hash;
+        window.sessionStorage.setItem('spa-redirect', route);
+        window.location.replace(window.location.origin + '/' + repository + '/');
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
