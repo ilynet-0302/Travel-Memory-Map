@@ -2463,6 +2463,127 @@ h3 {
   font-weight: 400;
 }
 
+.trip-rating-card {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.trip-rating-card--editing {
+  z-index: 5;
+}
+
+.trip-rating-card__value {
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-rating-card__value em {
+  margin-top: 1px;
+  color: #9a9e98;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 650;
+}
+
+.trip-rating-card__trigger {
+  padding: 6px 8px;
+  border: 1px solid #e1d5be;
+  border-radius: 8px;
+  background: #faf4e8;
+  color: #8d642d;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.trip-rating-card__editor {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: min(280px, calc(100vw - 48px));
+  padding: 12px;
+  border: 1px solid #ded8cd;
+  border-radius: 12px;
+  background: #fffefa;
+  box-shadow: 0 18px 40px rgba(48, 55, 49, 0.16);
+}
+
+.trip-rating-card__editor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #4f554f;
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.trip-rating-card__editor-heading button {
+  display: grid;
+  padding: 2px;
+  border: 0;
+  background: transparent;
+  color: #898d87;
+  cursor: pointer;
+}
+
+.trip-rating-scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.trip-rating-scale button {
+  min-height: 26px;
+  border: 1px solid #ddd7ca;
+  border-radius: 7px;
+  background: #fff;
+  color: #60665f;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.trip-rating-scale button:hover,
+.trip-rating-scale button.is-selected {
+  border-color: #d29a52;
+  background: #f2dfb9;
+  color: #76501e;
+}
+
+.trip-rating-scale button:disabled,
+.trip-rating-card__remove:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.trip-rating-card__legend {
+  display: flex;
+  justify-content: space-between;
+  color: #a2a49f;
+  font-size: 7px;
+}
+
+.trip-rating-card__remove {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #b35e50;
+  font-size: 8px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.trip-rating-card__editor p {
+  margin: 0;
+  color: #bf5548;
+  font-size: 8px;
+}
+
 .tab-placeholder {
   min-height: 430px;
   border: 1px dashed #d7d8d1;

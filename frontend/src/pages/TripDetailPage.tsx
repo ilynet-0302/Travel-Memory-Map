@@ -22,6 +22,7 @@ import { TripMembersPanel } from '../features/collaboration/components/TripMembe
 import { ExpensesPanel } from '../features/expenses/components/ExpensesPanel';
 import { TripMap } from '../features/map/components/TripMap';
 import { PhotosPanel } from '../features/photos/components/PhotosPanel';
+import { TripRatingCard } from '../features/ratings/components/TripRatingCard';
 import { ReplayControls } from '../features/replay/components/ReplayControls';
 import { useTripReplay } from '../features/replay/hooks/useReplay';
 import { EditTripDialog } from '../features/trips/components/EditTripDialog';
@@ -308,7 +309,7 @@ export function TripDetailPage() {
             <article><span className="insight-icon insight-icon--coral"><MapPin size={19} /></span><span><small>PLACES SAVED</small><strong>{trip.stops.length}</strong></span></article>
             <article><span className="insight-icon insight-icon--blue"><Camera size={19} /></span><span><small>MEMORIES</small><strong>{trip.photos || '—'}</strong></span></article>
             <article><span className="insight-icon insight-icon--sage"><CircleDollarSign size={19} /></span><span><small>TRIP BUDGET</small><strong>€{trip.spent}</strong></span></article>
-            <article><span className="insight-icon insight-icon--sand"><Star size={19} /></span><span><small>TRIP RATING</small><strong>9.2</strong></span></article>
+            <TripRatingCard tripId={trip.id} />
           </section>
         </>
       ) : activeTab === 'Photos' ? (
