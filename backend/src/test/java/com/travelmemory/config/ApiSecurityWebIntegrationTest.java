@@ -116,6 +116,7 @@ class ApiSecurityWebIntegrationTest {
                 null,
                 TripRole.OWNER,
                 1,
+                0,
                 List.of()));
         when(invitationService.acceptInvite(token)).thenReturn(
                 new AcceptInviteResponse(tripId, UUID.randomUUID(), TripRole.EDITOR));

@@ -9,6 +9,7 @@ spring:
         jwt:
           issuer-uri: https://your-project.supabase.co/auth/v1
           jwk-set-uri: https://your-project.supabase.co/auth/v1/.well-known/jwks.json
+          jws-algorithms: ES256
 
 app:
   cors:

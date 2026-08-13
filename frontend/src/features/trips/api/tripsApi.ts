@@ -31,6 +31,7 @@ interface BackendTrip {
   visibility: Trip['visibility'];
   currentUserRole?: Trip['currentUserRole'];
   memberCount: number;
+  photoCount?: number;
   stops?: BackendStop[];
 }
 
@@ -64,7 +65,7 @@ function mapBackendTrip(trip: BackendTrip): Trip {
     description: trip.description ?? 'A journey waiting to be filled with stories.',
     currentUserRole: trip.currentUserRole ?? 'VIEWER',
     accent: ['terracotta', 'indigo', 'aqua', 'sage'][trip.city.length % 4],
-    photos: 0,
+    photos: trip.photoCount ?? 0,
     spent: 0,
     currency: 'EUR',
     stops: (trip.stops ?? [])

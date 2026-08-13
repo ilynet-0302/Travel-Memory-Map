@@ -1,6 +1,7 @@
 package com.travelmemory.statistics.service;
 
 import com.travelmemory.statistics.dto.TravelStatisticsResponse;
+import com.travelmemory.photo.repository.PhotoRepository;
 import com.travelmemory.trip.entity.Trip;
 import com.travelmemory.trip.repository.TripRepository;
 import com.travelmemory.trip.repository.TripStopRepository;
@@ -18,14 +19,17 @@ public class TravelStatisticsService {
 
     private final TripRepository tripRepository;
     private final TripStopRepository tripStopRepository;
+    private final PhotoRepository photoRepository;
     private final Clock clock;
 
     public TravelStatisticsService(
             TripRepository tripRepository,
             TripStopRepository tripStopRepository,
+            PhotoRepository photoRepository,
             Clock clock) {
         this.tripRepository = tripRepository;
         this.tripStopRepository = tripStopRepository;
+        this.photoRepository = photoRepository;
         this.clock = clock;
     }
 
@@ -38,6 +42,7 @@ public class TravelStatisticsService {
                 .toList();
         List<UUID> startedTripIds = startedTrips.stream().map(Trip::getId).toList();
         long placesVisited = startedTripIds.isEmpty() ? 0 : tripStopRepository.countByTripIdIn(startedTripIds);
+        long photosUploaded = startedTripIds.isEmpty() ? 0 : photoRepository.countByTripIdIn(startedTripIds);
         long travelDays = startedTrips.stream()
                 .mapToLong(trip -> ChronoUnit.DAYS.between(
                         trip.getStartDate(),
@@ -50,6 +55,7 @@ public class TravelStatisticsService {
                 trips.size(),
                 (int) trips.stream().filter(trip -> trip.getEndDate().isBefore(today)).count(),
                 placesVisited,
+                photosUploaded,
                 travelDays);
     }
 }

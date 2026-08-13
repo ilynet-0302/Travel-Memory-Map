@@ -20,21 +20,49 @@ export class ApiError extends Error {
   }
 }
 
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken() {
+  if (!supabase) return null;
+  if (!refreshPromise) {
+    refreshPromise = supabase.auth.refreshSession()
+      .then(({ data, error }) => error ? null : data.session?.access_token ?? null)
+      .catch(() => null)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
+
+function requestHeaders(init: RequestInit | undefined, accessToken: string | null, hasFormBody: boolean) {
+  const headers = new Headers(init?.headers);
+  if (!hasFormBody && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
+  return headers;
+}
+
 export async function apiClient<T>(path: string, init?: RequestInit): Promise<T> {
   const session = supabase ? (await supabase.auth.getSession()).data.session : null;
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  const hasFormBody = init?.body instanceof FormData;
+  const request = (accessToken: string | null) => fetch(`${apiBaseUrl}${path}`, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-      ...init?.headers,
-    },
+    headers: requestHeaders(init, accessToken, hasFormBody),
   });
+  let response = await request(session?.access_token ?? null);
+
+  if (response.status === 401 && session && supabase) {
+    const refreshedAccessToken = await refreshAccessToken();
+    if (refreshedAccessToken) response = await request(refreshedAccessToken);
+    if (response.status === 401) await supabase.auth.signOut({ scope: 'local' });
+  }
 
   if (!response.ok) {
     const error = (await response.json().catch(() => null)) as ApiErrorPayload | null;
     throw new ApiError(
-      error?.message ?? 'Something went wrong while talking to the server.',
+      error?.message ?? (response.status === 401
+        ? 'Your session is no longer valid. Please sign in again.'
+        : 'Something went wrong while talking to the server.'),
       response.status,
       error?.code,
       error?.fieldErrors,

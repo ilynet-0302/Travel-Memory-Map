@@ -13,10 +13,7 @@ import java.util.UUID;
 public class AuthenticatedUserProvider {
 
     public AuthenticatedUser getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!(authentication instanceof JwtAuthenticationToken jwtAuthentication) || !authentication.isAuthenticated()) {
-            throw new UnauthenticatedException();
-        }
+        JwtAuthenticationToken jwtAuthentication = getCurrentAuthentication();
 
         String subject = jwtAuthentication.getToken().getSubject();
         try {
@@ -28,6 +25,18 @@ public class AuthenticatedUserProvider {
         } catch (IllegalArgumentException exception) {
             throw new UnauthenticatedException("The access token subject is not a valid user identifier.");
         }
+    }
+
+    public String getCurrentAccessToken() {
+        return getCurrentAuthentication().getToken().getTokenValue();
+    }
+
+    private JwtAuthenticationToken getCurrentAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(authentication instanceof JwtAuthenticationToken jwtAuthentication) || !authentication.isAuthenticated()) {
+            throw new UnauthenticatedException();
+        }
+        return jwtAuthentication;
     }
 
     private String asString(Object value) {

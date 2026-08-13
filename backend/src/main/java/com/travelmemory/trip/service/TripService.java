@@ -8,6 +8,7 @@ import com.travelmemory.membership.entity.TripMember;
 import com.travelmemory.membership.entity.TripRole;
 import com.travelmemory.membership.repository.TripMemberRepository;
 import com.travelmemory.membership.service.TripPermissionService;
+import com.travelmemory.photo.repository.PhotoRepository;
 import com.travelmemory.trip.dto.CreateTripRequest;
 import com.travelmemory.trip.dto.TripDetailsResponse;
 import com.travelmemory.trip.dto.TripStopResponse;
@@ -33,6 +34,7 @@ public class TripService {
     private final TripRepository tripRepository;
     private final TripMemberRepository tripMemberRepository;
     private final TripStopRepository tripStopRepository;
+    private final PhotoRepository photoRepository;
     private final UserProfileService userProfileService;
     private final AuthenticatedUserProvider authenticatedUserProvider;
     private final TripPermissionService tripPermissionService;
@@ -43,6 +45,7 @@ public class TripService {
             TripRepository tripRepository,
             TripMemberRepository tripMemberRepository,
             TripStopRepository tripStopRepository,
+            PhotoRepository photoRepository,
             UserProfileService userProfileService,
             AuthenticatedUserProvider authenticatedUserProvider,
             TripPermissionService tripPermissionService,
@@ -51,6 +54,7 @@ public class TripService {
         this.tripRepository = tripRepository;
         this.tripMemberRepository = tripMemberRepository;
         this.tripStopRepository = tripStopRepository;
+        this.photoRepository = photoRepository;
         this.userProfileService = userProfileService;
         this.authenticatedUserProvider = authenticatedUserProvider;
         this.tripPermissionService = tripPermissionService;
@@ -74,7 +78,7 @@ public class TripService {
                 request.endDate(),
                 request.visibility()));
         tripMemberRepository.save(new TripMember(trip, owner, TripRole.OWNER));
-        return tripMapper.toDetails(trip, TripRole.OWNER, 1, List.of());
+        return tripMapper.toDetails(trip, TripRole.OWNER, 1, 0, List.of());
     }
 
     @Transactional(readOnly = true)
@@ -85,7 +89,8 @@ public class TripService {
                         trip,
                         currentUserRole(trip.getId(), userId),
                         tripMemberRepository.countByTripId(trip.getId()),
-                        tripStopRepository.countByTripId(trip.getId())))
+                        tripStopRepository.countByTripId(trip.getId()),
+                        photoRepository.countByTripId(trip.getId())))
                 .toList();
     }
 
@@ -98,7 +103,11 @@ public class TripService {
                 .map(tripStopMapper::toResponse)
                 .toList();
         return tripMapper.toDetails(
-                trip, currentUserRole(tripId, userId), tripMemberRepository.countByTripId(tripId), stops);
+                trip,
+                currentUserRole(tripId, userId),
+                tripMemberRepository.countByTripId(tripId),
+                photoRepository.countByTripId(tripId),
+                stops);
     }
 
     @Transactional
@@ -120,7 +129,11 @@ public class TripService {
                 .map(tripStopMapper::toResponse)
                 .toList();
         return tripMapper.toDetails(
-                trip, currentUserRole(tripId, userId), tripMemberRepository.countByTripId(tripId), stops);
+                trip,
+                currentUserRole(tripId, userId),
+                tripMemberRepository.countByTripId(tripId),
+                photoRepository.countByTripId(tripId),
+                stops);
     }
 
     @Transactional

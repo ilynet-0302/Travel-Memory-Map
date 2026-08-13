@@ -8,15 +8,15 @@ flowchart LR
     Browser -->|sign in| Auth[Supabase Auth]
     API -->|verify JWKS| Auth
     API --> DB[(PostgreSQL)]
-    Browser -. Phase 3 upload .-> Storage[Supabase Storage]
-    API -. signed access / metadata .-> Storage
+    Browser -->|multipart photo + bearer token| API
+    API -->|user JWT + Storage RLS| Storage[Private Supabase Storage]
 ```
 
 The Spring Boot API is the authoritative layer for permissions, memberships, invitations, expenses, settlements and derived travel intelligence. Hiding a frontend control is never treated as authorization.
 
 ## Backend organization
 
-The backend is organized by feature (`trip`, `membership`, `invitation`, `user`, and later `expense` and `photo`), with thin controllers and explicit services. Cross-feature policy is kept in narrowly named services such as `TripPermissionService`.
+The backend is organized by feature (`trip`, `membership`, `invitation`, `user`, `photo`, and later `expense`), with thin controllers and explicit services. Cross-feature policy is kept in narrowly named services such as `TripPermissionService`.
 
 ```mermaid
 flowchart TD
@@ -37,4 +37,4 @@ Demo mode is an adapter behind the same trip and collaboration API boundaries; c
 
 ## Phase boundaries
 
-The current slice covers the trip lifecycle (create, edit, archive and delete), stop lifecycle (create, edit and delete), timeline and replay, plus private collaboration. Owners control trip settings and lifecycle; owners and editors manage itinerary content. Owners also manage roles and issue limited invitations, while new members preview and accept an invitation without exposing the private trip. The next slice connects a real Supabase environment and strengthens HTTP-level authentication and authorization tests before photo storage, EXIF suggestions and shared expenses are added.
+The current slice covers trip and stop lifecycles, timeline and replay, private collaboration, authenticated profiles/statistics, and private photo storage. Owners control trip settings and lifecycle; owners and editors manage itinerary content and upload photos. Photo bytes stay in Supabase Storage while PostgreSQL stores metadata and extracted EXIF time/GPS values. The next Phase 3 slice is shared expenses and settlement calculation, followed by photo-synchronized replay.

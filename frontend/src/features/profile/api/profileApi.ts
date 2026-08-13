@@ -16,6 +16,7 @@ let demoProfile: UserProfile = {
     trips: 3,
     completedTrips: 2,
     placesVisited: 10,
+    photosUploaded: 0,
     travelDays: 19,
   },
 };

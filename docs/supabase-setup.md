@@ -72,10 +72,20 @@ DATABASE_USERNAME=<database-user>
 DATABASE_PASSWORD=<database-password>
 SUPABASE_AUTH_ISSUER=https://<project-ref>.supabase.co/auth/v1
 SUPABASE_JWKS_URI=https://<project-ref>.supabase.co/auth/v1/.well-known/jwks.json
+SUPABASE_JWS_ALGORITHMS=ES256
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+SUPABASE_PHOTO_BUCKET=trip-photos
 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ```
 
 The exact host and username differ between direct and pooled connections, so copy both from the dashboard instead of constructing them manually.
+
+`SUPABASE_JWS_ALGORITHMS` must match the `alg` value returned by the project's public JWKS endpoint. This project uses an EC signing key with `ES256`; Spring Security otherwise defaults to trusting `RS256` only.
+
+The publishable key is safe for this backend flow because every Storage request also carries the signed-in user's JWT and remains subject to Storage RLS. Never use a secret/service-role key here. If the Supabase URL and publishable key already exist in `frontend/.env.local`, the Windows launcher imports them as a fallback without printing their values.
+
+Flyway migration `V7__create_photos.sql` creates the `photos` metadata table, a private `trip-photos` bucket and Storage policies. The bucket accepts JPEG, PNG and WebP files up to 10 MB. Owner/editor members can upload; trip viewers can read through short-lived signed URLs; deletion remains restricted by the backend's content-ownership rules.
 
 ## 5. Start the full stack
 
@@ -104,7 +114,9 @@ Check the following before committing or deploying:
 3. Opening an invite anonymously shows its preview, but accepting it requires authentication.
 4. After sign-up from an invite URL, confirmation returns to `/join/<token>` and acceptance succeeds.
 5. An editor can manage stops but cannot manage members; a viewer cannot change either.
-6. `.env` and `frontend/.env.local` remain untracked and contain no committed secrets.
+6. An owner/editor can upload a photo, a viewer can open its signed preview, and an anonymous request cannot list private photos.
+7. The Supabase Storage bucket `trip-photos` remains private.
+8. `.env` and `frontend/.env.local` remain untracked and contain no committed secrets.
 
 ## Official references
 
@@ -114,3 +126,5 @@ Check the following before committing or deploying:
 - [Supabase signing keys](https://supabase.com/docs/guides/auth/signing-keys)
 - [Supabase redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)
 - [Supabase Postgres connection guide](https://supabase.com/docs/guides/database/connecting-to-postgres)
+- [Supabase private buckets](https://supabase.com/docs/guides/storage/buckets/fundamentals)
+- [Supabase Storage access control](https://supabase.com/docs/guides/storage/security/access-control)

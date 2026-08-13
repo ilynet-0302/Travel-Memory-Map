@@ -66,7 +66,7 @@ export function ProfilePage() {
     { label: 'Trips', value: statistics.trips, icon: PlaneTakeoff, tone: 'sand' },
     { label: 'Places', value: statistics.placesVisited, icon: Route, tone: 'blue' },
     { label: 'Travel days', value: statistics.travelDays, icon: CalendarDays, tone: 'sage' },
-    { label: 'Completed', value: statistics.completedTrips, icon: Check, tone: 'coral' },
+    { label: 'Photos', value: statistics.photosUploaded, icon: Camera, tone: 'coral' },
   ];
 
   const submit = form.handleSubmit(async (values) => {

@@ -21,5 +21,6 @@ public record TripSummaryResponse(
         String coverImageUrl,
         TripRole currentUserRole,
         long memberCount,
-        long stopCount) {
+        long stopCount,
+        long photoCount) {
 }
