@@ -10,6 +10,8 @@ const LoginPage = lazy(() => import('../../pages/LoginPage').then((module) => ({
 const TripDetailPage = lazy(() => import('../../pages/TripDetailPage').then((module) => ({ default: module.TripDetailPage })));
 const JoinTripPage = lazy(() => import('../../pages/JoinTripPage').then((module) => ({ default: module.JoinTripPage })));
 const ProfilePage = lazy(() => import('../../pages/ProfilePage').then((module) => ({ default: module.ProfilePage })));
+const TripComparisonPage = lazy(() => import('../../pages/TripComparisonPage').then((module) => ({ default: module.TripComparisonPage })));
+const WorldMapPage = lazy(() => import('../../pages/WorldMapPage').then((module) => ({ default: module.WorldMapPage })));
 
 function PageLoader() {
   return <div className="auth-loading"><span className="auth-loading__mark">◎</span><span>Unfolding the map…</span></div>;
@@ -27,16 +29,8 @@ export function AppRouter() {
               <Route index element={<DashboardPage />} />
               <Route path="trips" element={<TripsPage />} />
               <Route path="trips/:tripId" element={<TripDetailPage />} />
-              <Route
-                path="map"
-                element={
-                  <PlaceholderPage
-                    eyebrow="World map"
-                    title="Your travels, at a glance"
-                    description="The complete scratch map arrives in Phase 5. Your visited countries and trip routes will live here."
-                  />
-                }
-              />
+              <Route path="compare" element={<TripComparisonPage />} />
+              <Route path="map" element={<WorldMapPage />} />
               <Route
                 path="memories"
                 element={
