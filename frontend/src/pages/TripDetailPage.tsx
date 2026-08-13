@@ -19,6 +19,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AvatarStack } from '../components/ui/AvatarStack';
 import { TripMembersPanel } from '../features/collaboration/components/TripMembersPanel';
+import { ExpensesPanel } from '../features/expenses/components/ExpensesPanel';
 import { TripMap } from '../features/map/components/TripMap';
 import { PhotosPanel } from '../features/photos/components/PhotosPanel';
 import { ReplayControls } from '../features/replay/components/ReplayControls';
@@ -270,11 +271,13 @@ export function TripDetailPage() {
         </>
       ) : activeTab === 'Photos' ? (
         <PhotosPanel trip={trip} stops={trip.stops} />
+      ) : activeTab === 'Expenses' ? (
+        <ExpensesPanel trip={trip} />
       ) : activeTab === 'Members' ? (
         <TripMembersPanel tripId={trip.id} currentUserRole={trip.currentUserRole} />
       ) : (
         <section className="tab-placeholder">
-          <span>{activeTab === 'Expenses' ? <CircleDollarSign size={26} /> : <Compass size={26} />}</span>
+          <span><Compass size={26} /></span>
           <h2>{activeTab} are coming next</h2>
           <p>This first slice focuses on the journey map, timeline and replay. {activeTab} will connect to the same secure trip permissions.</p>
         </section>
