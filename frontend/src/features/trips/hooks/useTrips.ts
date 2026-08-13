@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { dnaKeys } from '../../dna/hooks/useDna';
 import { tripsApi } from '../api/tripsApi';
 import type { TripStopInput, UpdateTripInput } from '../types';
 
@@ -24,7 +25,10 @@ export function useCreateTrip() {
     mutationFn: tripsApi.create,
     onSuccess: async (trip) => {
       queryClient.setQueryData(tripKeys.detail(trip.id), trip);
-      await queryClient.invalidateQueries({ queryKey: tripKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
+      ]);
     },
   });
 }
@@ -35,7 +39,11 @@ export function useUpdateTrip(tripId: string) {
     mutationFn: (input: UpdateTripInput) => tripsApi.update(tripId, input),
     onSuccess: async (trip) => {
       queryClient.setQueryData(tripKeys.detail(tripId), trip);
-      await queryClient.invalidateQueries({ queryKey: tripKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+        queryClient.invalidateQueries({ queryKey: dnaKeys.trip(tripId) }),
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
+      ]);
     },
   });
 }
@@ -46,7 +54,10 @@ function useRemoveTrip(tripId: string, action: 'archive' | 'delete') {
     mutationFn: () => tripsApi[action](tripId),
     onSuccess: async () => {
       queryClient.removeQueries({ queryKey: tripKeys.detail(tripId) });
-      await queryClient.invalidateQueries({ queryKey: tripKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
+      ]);
     },
   });
 }
@@ -68,6 +79,8 @@ export function useCreateStop(tripId: string, tripStartDate: string) {
         queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
         queryClient.invalidateQueries({ queryKey: tripKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['trip-replay', tripId] }),
+        queryClient.invalidateQueries({ queryKey: dnaKeys.trip(tripId) }),
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
       ]);
     },
   });
@@ -83,6 +96,8 @@ export function useUpdateStop(tripId: string, tripStartDate: string) {
         queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
         queryClient.invalidateQueries({ queryKey: tripKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['trip-replay', tripId] }),
+        queryClient.invalidateQueries({ queryKey: dnaKeys.trip(tripId) }),
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
       ]);
     },
   });
@@ -97,6 +112,8 @@ export function useDeleteStop(tripId: string) {
         queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
         queryClient.invalidateQueries({ queryKey: tripKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['trip-replay', tripId] }),
+        queryClient.invalidateQueries({ queryKey: dnaKeys.trip(tripId) }),
+        queryClient.invalidateQueries({ queryKey: ['profile'] }),
       ]);
     },
   });

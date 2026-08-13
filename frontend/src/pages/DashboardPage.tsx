@@ -34,6 +34,8 @@ export function DashboardPage() {
   const featuredTrip = trips.find(({ id }) => id === 'rome-2026') ?? trips[0];
   const recentTrips = trips.filter(({ id }) => id !== featuredTrip?.id).slice(0, 2);
   const statistics = profile.data?.statistics;
+  const personality = profile.data?.personality;
+  const personalityStrength = personality ? Math.max(...Object.values(personality.scores)) : 0;
   const stats = [
     { label: 'Countries', value: statistics?.countriesVisited ?? 0, note: 'Unique countries', icon: Globe2, tone: 'sage' },
     { label: 'Cities', value: statistics?.citiesVisited ?? 0, note: `Across ${statistics?.trips ?? 0} trips`, icon: MapPin, tone: 'coral' },
@@ -104,7 +106,7 @@ export function DashboardPage() {
           <article className="world-card">
             <header>
               <span className="eyebrow eyebrow--light">YOUR WORLD</span>
-              <strong><span>12</span> / 195</strong>
+              <strong><span>{statistics?.countriesVisited ?? 0}</span> / 195</strong>
               <p>countries explored</p>
             </header>
             <div className="abstract-map" aria-hidden="true">
@@ -133,12 +135,12 @@ export function DashboardPage() {
           <article className="dna-card">
             <div>
               <span className="eyebrow">TRAVEL DNA</span>
-              <h3>Urban explorer</h3>
-              <p>You collect street corners, local tables and stories hidden in plain sight.</p>
+              <h3>{personality?.type ?? 'Still taking shape'}</h3>
+              <p>{personality?.description ?? 'Complete more journeys to reveal your travel personality.'}</p>
               <Link to="/profile">View profile <ArrowRight size={15} /></Link>
             </div>
             <div className="dna-orbit" aria-hidden="true">
-              <span>82%</span>
+              <span>{personalityStrength}%</span>
             </div>
           </article>
         </aside>

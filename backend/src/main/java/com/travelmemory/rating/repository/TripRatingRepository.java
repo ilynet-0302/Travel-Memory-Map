@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 public interface TripRatingRepository extends JpaRepository<TripRating, UUID> {
@@ -16,4 +18,6 @@ public interface TripRatingRepository extends JpaRepository<TripRating, UUID> {
 
     @Query("select avg(r.score) from TripRating r where r.trip.id = :tripId")
     Double averageScoreByTripId(@Param("tripId") UUID tripId);
+
+    List<TripRating> findByTripIdIn(Collection<UUID> tripIds);
 }
