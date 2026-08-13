@@ -1921,6 +1921,26 @@ h3 {
   font-weight: 800;
 }
 
+.route-summary {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.route-summary__source {
+  color: #7b887f;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.route-summary__source a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .map-panel__canvas {
   position: relative;
   height: 407px;
@@ -1990,6 +2010,31 @@ h3 {
   background: var(--coral);
 }
 
+.map-marker:not(.map-marker--visited) {
+  color: #7b847d;
+  background: #dfe4de;
+  opacity: 0.76;
+}
+
+.map-replay-cursor {
+  position: relative;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--coral);
+  box-shadow: 0 0 0 7px rgba(235, 112, 89, 0.2), 0 7px 18px rgba(46, 56, 49, 0.3);
+  font-size: 13px;
+  animation: replay-cursor-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes replay-cursor-pulse {
+  50% { box-shadow: 0 0 0 11px rgba(235, 112, 89, 0.08), 0 7px 18px rgba(46, 56, 49, 0.3); }
+}
+
 .active-stop-card {
   position: absolute;
   right: 16px;
@@ -2008,6 +2053,22 @@ h3 {
   backdrop-filter: blur(12px);
 }
 
+.active-stop-card--with-photo {
+  grid-template-columns: 74px auto minmax(0, 1fr) auto;
+}
+
+.active-stop-card__photo {
+  width: 74px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 8px;
+  animation: replay-memory-in 300ms ease-out;
+}
+
+@keyframes replay-memory-in {
+  from { opacity: 0; transform: translateY(5px); }
+}
+
 .active-stop-card__number {
   display: grid;
   width: 31px;
@@ -2020,8 +2081,9 @@ h3 {
   font-weight: 800;
 }
 
-.active-stop-card > span:nth-child(2) {
+.active-stop-card__copy {
   display: flex;
+  min-width: 0;
   flex-direction: column;
 }
 
@@ -2034,7 +2096,32 @@ h3 {
 
 .active-stop-card strong {
   margin-top: 2px;
+  overflow: hidden;
   font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.active-stop-card em {
+  margin-top: 2px;
+  overflow: hidden;
+  color: #858b84;
+  font-size: 8px;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.active-stop-card__memory-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 7px;
+  border-radius: 7px;
+  color: #a95040;
+  background: #f7e0d9;
+  font-size: 8px;
+  font-weight: 800;
 }
 
 .replay-panel {
@@ -2045,7 +2132,7 @@ h3 {
 
 .replay-panel__now {
   display: grid;
-  grid-template-columns: auto auto 1fr;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
@@ -2066,9 +2153,14 @@ h3 {
   font-weight: 400;
 }
 
-.replay-panel__now > span:last-child {
+.replay-panel__now > span:nth-child(3) {
   color: rgba(255, 255, 255, 0.66);
   font-size: 10px;
+}
+
+.replay-panel__now > small {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 8px;
 }
 
 .replay-panel__progress {
@@ -2084,7 +2176,17 @@ h3 {
   height: 100%;
   border-radius: inherit;
   background: var(--coral);
-  transition: width 400ms ease;
+}
+
+.replay-panel__status {
+  display: block;
+  margin-top: 9px;
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 8px;
+}
+
+.replay-panel__status--error {
+  color: #efb49f;
 }
 
 .replay-panel__controls {
@@ -3993,6 +4095,11 @@ h3 {
   .trip-insights { grid-template-columns: 1fr; }
   .replay-button { min-width: 105px; }
   .active-stop-card { right: 10px; left: 10px; }
+  .active-stop-card--with-photo { grid-template-columns: 54px auto minmax(0, 1fr); }
+  .active-stop-card__photo { width: 54px; height: 46px; }
+  .active-stop-card__memory-count { display: none; }
+  .replay-panel__now { grid-template-columns: auto auto minmax(0, 1fr); }
+  .replay-panel__now > small { display: none; }
   .trip-hero h1 { font-size: 40px; }
   .toast { right: 12px; left: 12px; }
   .toast a { display: none; }
