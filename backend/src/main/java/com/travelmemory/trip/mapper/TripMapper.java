@@ -12,7 +12,8 @@ import java.util.List;
 @Component
 public class TripMapper {
 
-    public TripSummaryResponse toSummary(Trip trip, TripRole currentUserRole, long memberCount, long stopCount) {
+    public TripSummaryResponse toSummary(
+            Trip trip, TripRole currentUserRole, long memberCount, long stopCount, long photoCount) {
         return new TripSummaryResponse(
                 trip.getId(),
                 trip.getTitle(),
@@ -27,11 +28,12 @@ public class TripMapper {
                 trip.getCoverImageUrl(),
                 currentUserRole,
                 memberCount,
-                stopCount);
+                stopCount,
+                photoCount);
     }
 
     public TripDetailsResponse toDetails(
-            Trip trip, TripRole currentUserRole, long memberCount, List<TripStopResponse> stops) {
+            Trip trip, TripRole currentUserRole, long memberCount, long photoCount, List<TripStopResponse> stops) {
         return new TripDetailsResponse(
                 trip.getId(),
                 trip.getOwner().getId(),
@@ -47,6 +49,7 @@ public class TripMapper {
                 trip.getCoverImageUrl(),
                 currentUserRole,
                 memberCount,
+                photoCount,
                 stops);
     }
 }

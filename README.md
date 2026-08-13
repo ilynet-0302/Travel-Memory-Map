@@ -6,7 +6,7 @@ This repository is being built as a production-shaped portfolio project. It sepa
 
 ## Current product slice
 
-The first two vertical slices are implemented:
+The trip, collaboration and photo vertical slices are implemented:
 
 - responsive dashboard with realistic travel summaries;
 - trip search and filters;
@@ -21,11 +21,14 @@ The first two vertical slices are implemented:
 - member list, owner-controlled EDITOR / VIEWER role management and leave flow;
 - secure invitation creation, anonymous preview, authenticated acceptance and revocation;
 - invite expiry, maximum-use enforcement, duplicate-member protection and row locking;
-- Spring Boot API for full trip and trip-stop lifecycle, members and invitations;
+- private Supabase Storage photo gallery with upload, signed previews and deletion;
+- JPEG/PNG/WebP validation, 10 MB limits, EXIF time/GPS extraction and stop association;
+- photo counts in trips and backend-derived profile statistics;
+- Spring Boot API for trips, stops, members, invitations and photos;
 - Supabase JWT verification through Spring Security Resource Server;
 - centralized OWNER / EDITOR / VIEWER permission checks;
 - PostgreSQL schema managed by Flyway;
-- invitation, permission, profile, statistics and HTTP security tests plus a Docker-aware Testcontainers integration test.
+- invitation, permission, profile, photo, statistics and HTTP security tests plus a Docker-aware Testcontainers integration test.
 
 The UI starts in demo mode so it is immediately explorable before Supabase credentials and the API are configured. Demo mode supports the same trip and stop lifecycle as the current backend slice.
 
@@ -54,7 +57,7 @@ Spring Boot API
           │
           ├── authorization and business rules
           ├── PostgreSQL / Flyway
-          └── Supabase Storage (Phase 3)
+          └── private Supabase Storage
 ```
 
 The frontend never sends a `userId` as proof of identity. The backend obtains the current user from the validated JWT `sub` claim and applies trip permissions before accessing protected data.
@@ -67,7 +70,7 @@ Frontend: React 19, TypeScript, Vite, React Router, TanStack Query, React Hook F
 
 Backend: Java 21, Spring Boot 4.1, Spring Web MVC, Spring Data JPA, Spring Security, Bean Validation, Flyway, MapStruct, JUnit, Mockito and Testcontainers.
 
-Data and identity: PostgreSQL, Supabase Auth and (in Phase 3) Supabase Storage.
+Data and identity: PostgreSQL, Supabase Auth and private Supabase Storage.
 
 ## Run locally
 
@@ -93,6 +96,6 @@ The frontend workflow builds Vite and publishes the output to GitHub Pages. The 
 ## Roadmap
 
 - Phase 2: complete â€” members, secure invitations, expiry/revocation/use limits and role management.
-- Phase 3: photos, EXIF suggestions, Supabase Storage and shared expense settlement.
+- Phase 3: photos, EXIF metadata and private Supabase Storage complete; shared expenses remain.
 - Phase 4: complete Trip Replay with synchronized photos and route animation.
 - Phase 5–6: Travel DNA, statistics, world map, public trips, search and On This Day.

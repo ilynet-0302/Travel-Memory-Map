@@ -20,6 +20,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AvatarStack } from '../components/ui/AvatarStack';
 import { TripMembersPanel } from '../features/collaboration/components/TripMembersPanel';
 import { TripMap } from '../features/map/components/TripMap';
+import { PhotosPanel } from '../features/photos/components/PhotosPanel';
 import { ReplayControls } from '../features/replay/components/ReplayControls';
 import { EditTripDialog } from '../features/trips/components/EditTripDialog';
 import { TripStopDialog } from '../features/trips/components/TripStopDialog';
@@ -267,11 +268,13 @@ export function TripDetailPage() {
             <article><span className="insight-icon insight-icon--sand"><Star size={19} /></span><span><small>TRIP RATING</small><strong>9.2</strong></span></article>
           </section>
         </>
+      ) : activeTab === 'Photos' ? (
+        <PhotosPanel trip={trip} stops={trip.stops} />
       ) : activeTab === 'Members' ? (
         <TripMembersPanel tripId={trip.id} currentUserRole={trip.currentUserRole} />
       ) : (
         <section className="tab-placeholder">
-          <span>{activeTab === 'Photos' ? <Camera size={26} /> : activeTab === 'Expenses' ? <CircleDollarSign size={26} /> : <Compass size={26} />}</span>
+          <span>{activeTab === 'Expenses' ? <CircleDollarSign size={26} /> : <Compass size={26} />}</span>
           <h2>{activeTab} are coming next</h2>
           <p>This first slice focuses on the journey map, timeline and replay. {activeTab} will connect to the same secure trip permissions.</p>
         </section>

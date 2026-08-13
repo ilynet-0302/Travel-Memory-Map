@@ -4,6 +4,7 @@ export interface TravelStatistics {
   trips: number;
   completedTrips: number;
   placesVisited: number;
+  photosUploaded: number;
   travelDays: number;
 }
 

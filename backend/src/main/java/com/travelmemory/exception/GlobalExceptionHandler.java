@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -43,6 +44,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiErrorResponse(
                 "INVALID_STATE",
                 exception.getMessage(),
+                OffsetDateTime.now(ZoneOffset.UTC),
+                Map.of()));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ApiErrorResponse> handleMaxUploadSize(MaxUploadSizeExceededException exception) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(new ApiErrorResponse(
+                "PHOTO_TOO_LARGE",
+                "Photos cannot be larger than 10 MB.",
                 OffsetDateTime.now(ZoneOffset.UTC),
                 Map.of()));
     }

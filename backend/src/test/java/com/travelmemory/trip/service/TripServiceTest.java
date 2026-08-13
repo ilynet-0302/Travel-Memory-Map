@@ -4,6 +4,7 @@ import com.travelmemory.auth.AuthenticatedUser;
 import com.travelmemory.auth.AuthenticatedUserProvider;
 import com.travelmemory.membership.repository.TripMemberRepository;
 import com.travelmemory.membership.service.TripPermissionService;
+import com.travelmemory.photo.repository.PhotoRepository;
 import com.travelmemory.trip.entity.Trip;
 import com.travelmemory.trip.entity.TripStatus;
 import com.travelmemory.trip.entity.TripVisibility;
@@ -37,6 +38,7 @@ class TripServiceTest {
                 tripRepository,
                 memberRepository,
                 stopRepository,
+                mock(PhotoRepository.class),
                 mock(UserProfileService.class),
                 userProvider,
                 permissionService,

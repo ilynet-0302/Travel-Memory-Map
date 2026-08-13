@@ -40,7 +40,7 @@ class UserProfileServiceTest {
         UUID userId = UUID.randomUUID();
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(userId, "ilia@example.com", "Old token name");
         UserProfile existingProfile = new UserProfile(userId, "ilia@example.com", "Initial name");
-        TravelStatisticsResponse statistics = new TravelStatisticsResponse(1, 2, 3, 2, 8, 12);
+        TravelStatisticsResponse statistics = new TravelStatisticsResponse(1, 2, 3, 2, 8, 14, 12);
 
         when(authenticatedUserProvider.getCurrentUser()).thenReturn(authenticatedUser);
         when(userProfileRepository.findById(userId)).thenReturn(Optional.of(existingProfile));

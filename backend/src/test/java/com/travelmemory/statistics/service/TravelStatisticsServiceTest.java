@@ -1,6 +1,7 @@
 package com.travelmemory.statistics.service;
 
 import com.travelmemory.statistics.dto.TravelStatisticsResponse;
+import com.travelmemory.photo.repository.PhotoRepository;
 import com.travelmemory.trip.entity.Trip;
 import com.travelmemory.trip.entity.TripVisibility;
 import com.travelmemory.trip.repository.TripRepository;
@@ -32,6 +33,9 @@ class TravelStatisticsServiceTest {
     @Mock
     private TripStopRepository tripStopRepository;
 
+    @Mock
+    private PhotoRepository photoRepository;
+
     private TravelStatisticsService travelStatisticsService;
 
     @BeforeEach
@@ -39,6 +43,7 @@ class TravelStatisticsServiceTest {
         travelStatisticsService = new TravelStatisticsService(
                 tripRepository,
                 tripStopRepository,
+                photoRepository,
                 Clock.fixed(Instant.parse("2026-08-13T10:00:00Z"), ZoneOffset.UTC));
     }
 
@@ -69,6 +74,7 @@ class TravelStatisticsServiceTest {
 
         when(tripRepository.findAccessibleTrips(userId)).thenReturn(List.of(rome, florence));
         when(tripStopRepository.countByTripIdIn(anyCollection())).thenReturn(7L);
+        when(photoRepository.countByTripIdIn(anyCollection())).thenReturn(18L);
 
         TravelStatisticsResponse statistics = travelStatisticsService.calculateFor(userId);
 
@@ -77,6 +83,7 @@ class TravelStatisticsServiceTest {
         assertThat(statistics.trips()).isEqualTo(2);
         assertThat(statistics.completedTrips()).isEqualTo(1);
         assertThat(statistics.placesVisited()).isEqualTo(7);
+        assertThat(statistics.photosUploaded()).isEqualTo(18);
         assertThat(statistics.travelDays()).isEqualTo(5);
     }
 }

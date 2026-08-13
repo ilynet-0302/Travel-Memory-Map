@@ -95,6 +95,6 @@ class UserProfileControllerWebTest {
                 null,
                 now.minusYears(1),
                 now,
-                new TravelStatisticsResponse(3, 5, 4, 3, 18, 24));
+                new TravelStatisticsResponse(3, 5, 4, 3, 18, 42, 24));
     }
 }
