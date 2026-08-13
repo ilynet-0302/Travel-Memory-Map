@@ -67,6 +67,10 @@ if ($invalidVariables.Count -gt 0) {
 
 Write-Host "Backend configuration loaded from $environmentPath (secret values hidden)."
 
+if ([string]::IsNullOrWhiteSpace($env:MAVEN_USER_HOME) -and -not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
+    $env:MAVEN_USER_HOME = Join-Path $env:USERPROFILE ".m2"
+}
+
 Push-Location (Join-Path $projectRoot "backend")
 try {
     & .\mvnw.cmd spring-boot:run

@@ -57,6 +57,14 @@ public class UserProfile {
         }
     }
 
+    public void updateDisplayName(String displayName) {
+        String normalizedDisplayName = displayName.trim();
+        if (!normalizedDisplayName.equals(this.displayName)) {
+            this.displayName = normalizedDisplayName;
+            this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
+        }
+    }
+
     public UUID getId() {
         return id;
     }
@@ -71,5 +79,13 @@ public class UserProfile {
 
     public String getAvatarUrl() {
         return avatarUrl;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
     }
 }

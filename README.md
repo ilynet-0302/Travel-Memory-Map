@@ -11,6 +11,7 @@ The first two vertical slices are implemented:
 - responsive dashboard with realistic travel summaries;
 - trip search and filters;
 - create-trip flow with React Hook Form and Zod;
+- editable authenticated travel profile with backend-derived trip statistics;
 - owner trip editing, archiving and permanent deletion;
 - owner/editor stop creation, editing and deletion;
 - trip detail with MapLibre route and markers;
@@ -24,7 +25,7 @@ The first two vertical slices are implemented:
 - Supabase JWT verification through Spring Security Resource Server;
 - centralized OWNER / EDITOR / VIEWER permission checks;
 - PostgreSQL schema managed by Flyway;
-- invitation and permission unit tests plus a Docker-aware Testcontainers integration test.
+- invitation, permission, profile, statistics and HTTP security tests plus a Docker-aware Testcontainers integration test.
 
 The UI starts in demo mode so it is immediately explorable before Supabase credentials and the API are configured. Demo mode supports the same trip and stop lifecycle as the current backend slice.
 

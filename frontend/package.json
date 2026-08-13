@@ -8,10 +8,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
+    "build": "tsc --noEmit -p tsconfig.app.json && vite build --configLoader=runner",
     "preview": "vite preview",
     "lint": "eslint src --max-warnings 0",
-    "test": "vitest run"
+    "test": "vitest run --configLoader=runner"
   },
   "dependencies": {
     "@hookform/resolvers": "latest",
