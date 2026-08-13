@@ -64,8 +64,11 @@ export function useCreateStop(tripId: string, tripStartDate: string) {
   return useMutation({
     mutationFn: (input: TripStopInput) => tripsApi.createStop(tripId, tripStartDate, input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) });
-      await queryClient.invalidateQueries({ queryKey: tripKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
+        queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['trip-replay', tripId] }),
+      ]);
     },
   });
 }
@@ -76,8 +79,11 @@ export function useUpdateStop(tripId: string, tripStartDate: string) {
     mutationFn: ({ stopId, input }: { stopId: string; input: TripStopInput }) =>
       tripsApi.updateStop(tripId, stopId, tripStartDate, input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) });
-      await queryClient.invalidateQueries({ queryKey: tripKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
+        queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['trip-replay', tripId] }),
+      ]);
     },
   });
 }
@@ -87,8 +93,11 @@ export function useDeleteStop(tripId: string) {
   return useMutation({
     mutationFn: (stopId: string) => tripsApi.deleteStop(tripId, stopId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) });
-      await queryClient.invalidateQueries({ queryKey: tripKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
+        queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['trip-replay', tripId] }),
+      ]);
     },
   });
 }

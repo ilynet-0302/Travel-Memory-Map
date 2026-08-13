@@ -23,6 +23,7 @@ import { ExpensesPanel } from '../features/expenses/components/ExpensesPanel';
 import { TripMap } from '../features/map/components/TripMap';
 import { PhotosPanel } from '../features/photos/components/PhotosPanel';
 import { ReplayControls } from '../features/replay/components/ReplayControls';
+import { useTripReplay } from '../features/replay/hooks/useReplay';
 import { EditTripDialog } from '../features/trips/components/EditTripDialog';
 import { TripStopDialog } from '../features/trips/components/TripStopDialog';
 import { useArchiveTrip, useDeleteStop, useDeleteTrip, useTrip } from '../features/trips/hooks/useTrips';
@@ -47,6 +48,7 @@ export function TripDetailPage() {
   const { tripId = '' } = useParams();
   const { data: trip, isLoading, error } = useTrip(tripId);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [routeProgress, setRouteProgress] = useState(0);
   const [activeTab, setActiveTab] = useState('Journey');
   const [editTripOpen, setEditTripOpen] = useState(false);
   const [stopDialogOpen, setStopDialogOpen] = useState(false);
@@ -56,13 +58,19 @@ export function TripDetailPage() {
   const deleteTrip = useDeleteTrip(tripId);
   const deleteStop = useDeleteStop(tripId);
   const navigate = useNavigate();
+  const replay = useTripReplay(tripId, activeTab === 'Journey');
+
+  const setReplayPosition = useCallback((index: number) => {
+    setActiveIndex(index);
+    setRouteProgress(index);
+  }, []);
 
   const selectStop = useCallback(
     (stopId: string) => {
       const index = trip?.stops.findIndex(({ id }) => id === stopId) ?? -1;
-      if (index >= 0) setActiveIndex(index);
+      if (index >= 0) setReplayPosition(index);
     },
-    [trip?.stops],
+    [setReplayPosition, trip?.stops],
   );
 
   const groupedStops = useMemo(() => {
@@ -85,10 +93,20 @@ export function TripDetailPage() {
   }
 
   const safeActiveIndex = Math.min(activeIndex, Math.max(0, trip.stops.length - 1));
+  const safeRouteProgress = Math.min(routeProgress, Math.max(0, trip.stops.length - 1));
   const activeStop = trip.stops[safeActiveIndex];
+  const activeFrame = replay.data?.frames.find(({ stopId }) => stopId === activeStop?.id);
+  const activeMemory = activeFrame?.photos[0];
   const isOwner = trip.currentUserRole === 'OWNER';
   const canEditStops = trip.currentUserRole === 'OWNER' || trip.currentUserRole === 'EDITOR';
   const actionError = archiveTrip.error ?? deleteTrip.error ?? deleteStop.error;
+  const routeLabel = replay.isLoading
+    ? 'CALCULATING ROAD ROUTE'
+    : replay.data?.routeSource === 'ROUTED'
+      ? 'ESTIMATED ROAD ROUTE'
+      : replay.data?.routeSource === 'DIRECT_FALLBACK'
+        ? 'DIRECT ROUTE FALLBACK'
+        : 'ADD PLACES FOR A ROUTE';
 
   const openNewStop = () => {
     setSelectedStop(undefined);
@@ -194,19 +212,43 @@ export function TripDetailPage() {
                   <span className="eyebrow">INTERACTIVE ROUTE</span>
                   <h2>Follow the story</h2>
                 </div>
-                <span className="route-distance"><Navigation size={15} /> 48 km</span>
+                <div className="route-summary" title="The road route is calculated from your saved places. It is not a recorded GPS track.">
+                  <span className="route-summary__source">
+                    {routeLabel}
+                    {replay.data?.routeSource === 'ROUTED' && (
+                      <> · <a href="https://project-osrm.org/" target="_blank" rel="noreferrer">OSRM</a></>
+                    )}
+                  </span>
+                  <span className="route-distance"><Navigation size={15} /> {replay.data ? `${replay.data.totalDistanceKm} km` : replay.isLoading ? 'Calculating…' : 'Route'}</span>
+                </div>
               </div>
               <div className="map-panel__canvas">
-                <TripMap stops={trip.stops} activeStopId={activeStop?.id} onStopSelect={selectStop} />
+                <TripMap
+                  stops={trip.stops}
+                  activeStopId={activeStop?.id}
+                  routeProgress={safeRouteProgress}
+                  routeSegments={replay.data?.routeSegments}
+                  onStopSelect={selectStop}
+                />
                 {activeStop && (
-                  <div className="active-stop-card">
+                  <div className={`active-stop-card${activeMemory ? ' active-stop-card--with-photo' : ''}`}>
+                    {activeMemory && <img className="active-stop-card__photo" src={activeMemory.signedUrl} alt={activeMemory.caption || activeStop.name} />}
                     <span className="active-stop-card__number">{safeActiveIndex + 1}</span>
-                    <span><small>NOW EXPLORING</small><strong>{activeStop.name}</strong></span>
-                    <ChevronRight size={17} />
+                    <span className="active-stop-card__copy"><small>NOW EXPLORING · DAY {activeStop.day}</small><strong>{activeStop.name}</strong>{activeMemory?.caption && <em>{activeMemory.caption}</em>}</span>
+                    {activeFrame?.photos.length ? <span className="active-stop-card__memory-count"><Camera size={13} /> {activeFrame.photos.length}</span> : <ChevronRight size={17} />}
                   </div>
                 )}
               </div>
-              <ReplayControls stops={trip.stops} activeIndex={safeActiveIndex} onActiveIndexChange={setActiveIndex} />
+              <ReplayControls
+                stops={trip.stops}
+                frames={replay.data?.frames}
+                activeIndex={safeActiveIndex}
+                routeProgress={safeRouteProgress}
+                onActiveIndexChange={setActiveIndex}
+                onRouteProgressChange={setRouteProgress}
+                loading={replay.isLoading}
+                errorMessage={replay.error?.message}
+              />
             </div>
 
             <aside className="timeline-panel">
@@ -237,7 +279,7 @@ export function TripDetailPage() {
                           <button
                             type="button"
                             className={`timeline-stop${active ? ' timeline-stop--active' : ''}`}
-                            onClick={() => setActiveIndex(index)}
+                            onClick={() => setReplayPosition(index)}
                           >
                             <span className="timeline-stop__time">{stop.arrivalTime}</span>
                             <span className="timeline-stop__dot">{categoryEmoji[stop.category]}</span>

@@ -14,7 +14,7 @@ The trip, collaboration and photo vertical slices are implemented:
 - editable authenticated travel profile with backend-derived trip statistics;
 - owner trip editing, archiving and permanent deletion;
 - owner/editor stop creation, editing and deletion;
-- trip detail with MapLibre route and markers;
+- trip detail with a labelled OpenStreetMap-based MapLibre basemap, full route and markers;
 - timeline generated from trip stops;
 - interactive Trip Replay controls (play, pause, previous, next, 1×/2×/4×);
 - TanStack Query API boundary and optional demo mode;
@@ -36,7 +36,9 @@ The UI starts in demo mode so it is immediately explorable before Supabase crede
 
 ### Trip Replay
 
-Stops are played in chronological order while the map camera moves through the journey. The route, timeline and current memory stay synchronized.
+Stops are played in chronological order while the route, timeline and current memory stay synchronized. With routing enabled, replay follows road geometry through every saved stop and keeps the complete route visible.
+
+Road routing is privacy-sensitive because an external provider receives the saved stop coordinates. It is disabled by default. Set `ROUTING_ENABLED=true` only after accepting that disclosure, or point `ROUTING_BASE_URL` at a self-hosted OSRM instance. Without opt-in, replay falls back to direct local segments and sends no stop coordinates to a routing provider.
 
 ### Private collaborative trips
 

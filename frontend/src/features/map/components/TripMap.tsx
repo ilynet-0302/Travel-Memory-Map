@@ -1,18 +1,70 @@
 import maplibregl, { type GeoJSONSource, type Map as MapLibreMap, type Marker } from 'maplibre-gl';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  clampReplayProgress,
+  coordinateAtReplayProgress,
+  fullReplayRoute,
+  replayRoutePaths,
+  routeAtReplayProgress,
+  type Coordinate,
+} from '../../replay/replayPlayback';
+import type { ReplayRouteSegment } from '../../replay/types';
 import type { TripStop } from '../../trips/types';
 
 interface TripMapProps {
   stops: TripStop[];
   activeStopId?: string;
+  routeProgress?: number;
+  routeSegments?: ReplayRouteSegment[];
   onStopSelect?: (stopId: string) => void;
 }
 
-export function TripMap({ stops, activeStopId, onStopSelect }: TripMapProps) {
+function routeFeature(coordinates: Coordinate[]) {
+  return {
+    type: 'Feature' as const,
+    properties: {},
+    geometry: { type: 'LineString' as const, coordinates },
+  };
+}
+
+function fitFullRoute(map: MapLibreMap, coordinates: Coordinate[]) {
+  if (!coordinates.length) return;
+  const bounds = coordinates.reduce(
+    (current, coordinate) => current.extend(coordinate),
+    new maplibregl.LngLatBounds(coordinates[0], coordinates[0]),
+  );
+  map.fitBounds(bounds, { padding: 52, maxZoom: 14, duration: 0 });
+}
+
+export function TripMap({ stops, activeStopId, routeProgress = 0, routeSegments, onStopSelect }: TripMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
+  const replayMarkerRef = useRef<Marker | null>(null);
+  const progressRef = useRef(routeProgress);
   const [mapUnavailable, setMapUnavailable] = useState(false);
+  const stopCoordinates = useMemo(() => stops.map(({ coordinates }) => coordinates), [stops]);
+  const routePaths = useMemo(
+    () => replayRoutePaths(routeSegments),
+    [routeSegments],
+  );
+  const fullRoute = useMemo(
+    () => fullReplayRoute(routePaths, stopCoordinates),
+    [routePaths, stopCoordinates],
+  );
+  const stopCoordinatesRef = useRef(stopCoordinates);
+  const routePathsRef = useRef(routePaths);
+  const fullRouteRef = useRef(fullRoute);
+
+  useEffect(() => {
+    stopCoordinatesRef.current = stopCoordinates;
+    routePathsRef.current = routePaths;
+    fullRouteRef.current = fullRoute;
+  }, [fullRoute, routePaths, stopCoordinates]);
+
+  useEffect(() => {
+    progressRef.current = routeProgress;
+  }, [routeProgress]);
 
   useEffect(() => {
     if (!containerRef.current || stops.length === 0 || mapRef.current) return;
@@ -20,9 +72,9 @@ export function TripMap({ stops, activeStopId, onStopSelect }: TripMapProps) {
     try {
       const map = new maplibregl.Map({
         container: containerRef.current,
-        style: import.meta.env.VITE_MAP_STYLE_URL ?? 'https://demotiles.maplibre.org/style.json',
-        center: stops[1]?.coordinates ?? stops[0].coordinates,
-        zoom: 11.2,
+        style: import.meta.env.VITE_MAP_STYLE_URL ?? 'https://tiles.openfreemap.org/styles/liberty',
+        center: stops[0].coordinates,
+        zoom: 13,
         attributionControl: false,
       });
       mapRef.current = map;
@@ -30,38 +82,65 @@ export function TripMap({ stops, activeStopId, onStopSelect }: TripMapProps) {
       map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
       map.on('load', () => {
-        const initialCoordinates = [stops[0].coordinates, stops[0].coordinates];
-        map.addSource('trip-route', {
+        const currentStopCoordinates = stopCoordinatesRef.current;
+        const currentRoutePaths = routePathsRef.current;
+        const currentFullRoute = fullRouteRef.current;
+        const initialRoute = routeAtReplayProgress(
+          currentRoutePaths,
+          currentStopCoordinates,
+          progressRef.current,
+        );
+        map.addSource('trip-route-guide', {
           type: 'geojson',
-          data: {
-            type: 'Feature',
-            properties: {},
-            geometry: {
-              type: 'LineString',
-              coordinates: initialCoordinates,
-            },
+          data: routeFeature(currentFullRoute),
+        });
+        map.addLayer({
+          id: 'trip-route-guide',
+          type: 'line',
+          source: 'trip-route-guide',
+          layout: {
+            'line-cap': 'round',
+            'line-join': 'round',
           },
+          paint: {
+            'line-color': '#3d5c4e',
+            'line-width': 4,
+            'line-opacity': 0.48,
+          },
+        });
+        map.addSource('trip-route-progress', {
+          type: 'geojson',
+          data: routeFeature(initialRoute),
         });
         map.addLayer({
           id: 'trip-route-shadow',
           type: 'line',
-          source: 'trip-route',
+          source: 'trip-route-progress',
+          layout: {
+            'line-cap': 'round',
+            'line-join': 'round',
+          },
           paint: {
             'line-color': '#ffffff',
-            'line-width': 7,
-            'line-opacity': 0.85,
+            'line-width': 10,
+            'line-opacity': 0.9,
           },
         });
         map.addLayer({
-          id: 'trip-route',
+          id: 'trip-route-progress',
           type: 'line',
-          source: 'trip-route',
+          source: 'trip-route-progress',
+          layout: {
+            'line-cap': 'round',
+            'line-join': 'round',
+          },
           paint: {
             'line-color': '#ee7259',
-            'line-width': 3,
-            'line-dasharray': [1.6, 1.4],
+            'line-width': 5,
+            'line-opacity': 0.96,
           },
         });
+        fitFullRoute(map, currentFullRoute);
       });
 
       markersRef.current = stops.map((stop, index) => {
@@ -77,9 +156,18 @@ export function TripMap({ stops, activeStopId, onStopSelect }: TripMapProps) {
           .addTo(map);
       });
 
+      const replayElement = document.createElement('div');
+      replayElement.className = 'map-replay-cursor';
+      replayElement.innerHTML = '<span>✦</span>';
+      replayMarkerRef.current = new maplibregl.Marker({ element: replayElement, anchor: 'center' })
+        .setLngLat(stops[0].coordinates)
+        .addTo(map);
+
       return () => {
         markersRef.current.forEach((marker) => marker.remove());
         markersRef.current = [];
+        replayMarkerRef.current?.remove();
+        replayMarkerRef.current = null;
         map.remove();
         mapRef.current = null;
       };
@@ -90,31 +178,34 @@ export function TripMap({ stops, activeStopId, onStopSelect }: TripMapProps) {
   }, [onStopSelect, stops]);
 
   useEffect(() => {
-    markersRef.current.forEach((marker) => {
-      marker
-        .getElement()
-        .classList.toggle('map-marker--active', marker.getElement().dataset.stopId === activeStopId);
-    });
+    const map = mapRef.current;
+    if (!map) return;
+    const guideSource = map.getSource('trip-route-guide') as GeoJSONSource | undefined;
+    const progressSource = map.getSource('trip-route-progress') as GeoJSONSource | undefined;
+    if (!guideSource || !progressSource) return;
+    guideSource.setData(routeFeature(fullRoute));
+    progressSource.setData(routeFeature(routeAtReplayProgress(routePaths, stopCoordinates, progressRef.current)));
+    fitFullRoute(map, fullRoute);
+  }, [fullRoute, routePaths, stopCoordinates]);
 
-    const activeStop = stops.find(({ id }) => id === activeStopId);
-    if (activeStop && mapRef.current) {
-      const activeIndex = stops.findIndex(({ id }) => id === activeStopId);
-      const visibleCoordinates = stops.slice(0, activeIndex + 1).map(({ coordinates }) => coordinates);
-      if (visibleCoordinates.length === 1) visibleCoordinates.push(visibleCoordinates[0]);
-      const routeSource = mapRef.current.getSource('trip-route') as GeoJSONSource | undefined;
-      routeSource?.setData({
-        type: 'Feature',
-        properties: {},
-        geometry: { type: 'LineString', coordinates: visibleCoordinates },
-      });
-      mapRef.current.flyTo({
-        center: activeStop.coordinates,
-        zoom: 14.2,
-        duration: 1_100,
-        essential: true,
-      });
-    }
-  }, [activeStopId, stops]);
+  useEffect(() => {
+    const completedIndex = Math.floor(clampReplayProgress(routeProgress, stops.length) + 0.0001);
+    markersRef.current.forEach((marker, index) => {
+      const element = marker.getElement();
+      element.classList.toggle('map-marker--active', element.dataset.stopId === activeStopId);
+      element.classList.toggle('map-marker--visited', index <= completedIndex);
+    });
+  }, [activeStopId, routeProgress, stops.length]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !stops.length) return;
+    const cursor = coordinateAtReplayProgress(routePaths, stopCoordinates, routeProgress);
+    if (!cursor) return;
+    const routeSource = map.getSource('trip-route-progress') as GeoJSONSource | undefined;
+    routeSource?.setData(routeFeature(routeAtReplayProgress(routePaths, stopCoordinates, routeProgress)));
+    replayMarkerRef.current?.setLngLat(cursor);
+  }, [routePaths, routeProgress, stopCoordinates, stops.length]);
 
   if (mapUnavailable) {
     return (
@@ -125,5 +216,5 @@ export function TripMap({ stops, activeStopId, onStopSelect }: TripMapProps) {
     );
   }
 
-  return <div ref={containerRef} className="trip-map" aria-label="Interactive route map" />;
+  return <div ref={containerRef} className="trip-map" aria-label="Interactive animated road route map" />;
 }

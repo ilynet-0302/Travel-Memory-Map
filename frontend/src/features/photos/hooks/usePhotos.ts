@@ -18,6 +18,7 @@ export function useUploadPhoto(tripId: string) {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: photoKeys.trip(tripId) }),
+        queryClient.invalidateQueries({ queryKey: ['trip-replay', tripId] }),
         queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
         queryClient.invalidateQueries({ queryKey: tripKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['profile'] }),
@@ -33,6 +34,7 @@ export function useDeletePhoto(tripId: string) {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: photoKeys.trip(tripId) }),
+        queryClient.invalidateQueries({ queryKey: ['trip-replay', tripId] }),
         queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
         queryClient.invalidateQueries({ queryKey: ['profile'] }),
       ]);

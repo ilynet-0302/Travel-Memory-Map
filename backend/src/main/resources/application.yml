@@ -41,3 +41,9 @@ app:
     url: ${SUPABASE_URL:${VITE_SUPABASE_URL:http://localhost:54321}}
     publishable-key: ${SUPABASE_PUBLISHABLE_KEY:${VITE_SUPABASE_PUBLISHABLE_KEY:local-publishable-key}}
     photo-bucket: ${SUPABASE_PHOTO_BUCKET:trip-photos}
+  routing:
+    enabled: ${ROUTING_ENABLED:false}
+    base-url: ${ROUTING_BASE_URL:https://router.project-osrm.org}
+    profile: ${ROUTING_PROFILE:driving}
+    connect-timeout-seconds: ${ROUTING_CONNECT_TIMEOUT_SECONDS:3}
+    read-timeout-seconds: ${ROUTING_READ_TIMEOUT_SECONDS:8}
