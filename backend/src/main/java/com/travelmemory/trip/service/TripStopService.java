@@ -3,9 +3,11 @@ package com.travelmemory.trip.service;
 import com.travelmemory.auth.AuthenticatedUser;
 import com.travelmemory.auth.AuthenticatedUserProvider;
 import com.travelmemory.exception.InvalidTripDateException;
+import com.travelmemory.exception.InvalidTripStopOrderException;
 import com.travelmemory.exception.TripStopNotFoundException;
 import com.travelmemory.membership.service.TripPermissionService;
 import com.travelmemory.trip.dto.CreateTripStopRequest;
+import com.travelmemory.trip.dto.ReorderTripStopsRequest;
 import com.travelmemory.trip.dto.TripStopResponse;
 import com.travelmemory.trip.dto.UpdateTripStopRequest;
 import com.travelmemory.trip.entity.Trip;
@@ -18,8 +20,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class TripStopService {
@@ -94,6 +100,35 @@ public class TripStopService {
         Trip trip = tripService.getTripEntity(tripId);
         tripPermissionService.requireEditorOrOwner(trip, userId);
         tripStopRepository.delete(findStop(tripId, stopId));
+    }
+
+    @Transactional
+    public List<TripStopResponse> reorderStops(UUID tripId, ReorderTripStopsRequest request) {
+        UUID userId = authenticatedUserProvider.getCurrentUser().id();
+        Trip trip = tripService.getTripEntity(tripId);
+        tripPermissionService.requireEditorOrOwner(trip, userId);
+
+        List<TripStop> stops = tripStopRepository.findByTripIdForUpdate(tripId);
+        List<UUID> requestedIds = request.stopIds();
+        if (requestedIds.size() != stops.size()
+                || new HashSet<>(requestedIds).size() != requestedIds.size()) {
+            throw new InvalidTripStopOrderException();
+        }
+
+        Map<UUID, TripStop> stopsById = stops.stream()
+                .collect(Collectors.toMap(TripStop::getId, Function.identity()));
+        if (!stopsById.keySet().containsAll(requestedIds)) {
+            throw new InvalidTripStopOrderException();
+        }
+
+        for (int position = 0; position < requestedIds.size(); position++) {
+            stopsById.get(requestedIds.get(position)).moveToPosition(position);
+        }
+
+        return requestedIds.stream()
+                .map(stopsById::get)
+                .map(tripStopMapper::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)

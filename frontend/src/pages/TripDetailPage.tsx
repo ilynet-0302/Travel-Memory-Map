@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Globe2,
   LockKeyhole,
+  ListRestart,
   MapPin,
   MoreHorizontal,
   Navigation,
@@ -30,6 +31,7 @@ import { TripRatingCard } from '../features/ratings/components/TripRatingCard';
 import { ReplayControls } from '../features/replay/components/ReplayControls';
 import { useTripReplay } from '../features/replay/hooks/useReplay';
 import { EditTripDialog } from '../features/trips/components/EditTripDialog';
+import { ReorderStopsDialog } from '../features/trips/components/ReorderStopsDialog';
 import { TripStopDialog } from '../features/trips/components/TripStopDialog';
 import { useArchiveTrip, useDeleteStop, useDeleteTrip, useTrip } from '../features/trips/hooks/useTrips';
 import type { StopCategory, TripStop } from '../features/trips/types';
@@ -57,6 +59,7 @@ export function TripDetailPage() {
   const [activeTab, setActiveTab] = useState('Journey');
   const [editTripOpen, setEditTripOpen] = useState(false);
   const [stopDialogOpen, setStopDialogOpen] = useState(false);
+  const [reorderStopsOpen, setReorderStopsOpen] = useState(false);
   const [selectedStop, setSelectedStop] = useState<TripStop | undefined>();
   const [actionsOpen, setActionsOpen] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
@@ -287,7 +290,12 @@ export function TripDetailPage() {
             <aside className="timeline-panel">
               <header>
                 <div><span className="eyebrow">YOUR TIMELINE</span><h2>Day by day</h2></div>
-                {canEditStops && <button className="icon-button" type="button" aria-label="Add stop" onClick={openNewStop}>+</button>}
+                {canEditStops && (
+                  <div className="timeline-panel__header-actions">
+                    {trip.stops.length > 1 && <button className="icon-button" type="button" title="Reorder places" aria-label="Reorder places" onClick={() => setReorderStopsOpen(true)}><ListRestart size={17} /></button>}
+                    <button className="icon-button" type="button" title="Add place" aria-label="Add stop" onClick={openNewStop}>+</button>
+                  </div>
+                )}
               </header>
               <div className="timeline-scroll">
                 {!trip.stops.length && (
@@ -355,6 +363,7 @@ export function TripDetailPage() {
 
       <EditTripDialog open={editTripOpen} trip={trip} onClose={() => setEditTripOpen(false)} />
       <TripStopDialog open={stopDialogOpen} trip={trip} stop={selectedStop} onClose={() => setStopDialogOpen(false)} />
+      {reorderStopsOpen && <ReorderStopsDialog open trip={trip} onClose={() => setReorderStopsOpen(false)} />}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import com.travelmemory.membership.entity.TripRole;
 import com.travelmemory.membership.service.TripMemberService;
 import com.travelmemory.trip.controller.TripController;
 import com.travelmemory.trip.dto.CreateTripRequest;
+import com.travelmemory.trip.dto.ReorderTripStopsRequest;
 import com.travelmemory.trip.dto.TripDetailsResponse;
 import com.travelmemory.trip.entity.TripStatus;
 import com.travelmemory.trip.entity.TripVisibility;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -194,5 +196,26 @@ class ApiSecurityWebIntegrationTest {
                 .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"));
 
         verify(tripService, never()).createTrip(any(CreateTripRequest.class));
+    }
+
+    @Test
+    void authenticatedStopOrderRequestUsesTheDedicatedRoute() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        UUID firstStopId = UUID.randomUUID();
+        UUID secondStopId = UUID.randomUUID();
+        when(tripStopService.reorderStops(any(UUID.class), any(ReorderTripStopsRequest.class)))
+                .thenReturn(List.of());
+
+        mockMvc.perform(put("/api/v1/trips/{tripId}/stops/order", tripId)
+                        .with(jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"stopIds":["%s","%s"]}
+                                """.formatted(secondStopId, firstStopId)))
+                .andExpect(status().isOk());
+
+        verify(tripStopService).reorderStops(
+                org.mockito.ArgumentMatchers.eq(tripId),
+                argThat(request -> request.stopIds().equals(List.of(secondStopId, firstStopId))));
     }
 }

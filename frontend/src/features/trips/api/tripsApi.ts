@@ -1,6 +1,7 @@
 import { apiClient } from '../../../services/apiClient';
 import { demoTrips } from '../data/demoTrips';
-import type { CreateTripInput, Trip, TripSearchFilters, TripStop, TripStopInput, UpdateTripInput } from '../types';
+import type { CreateTripInput, ImportedMapPlace, Trip, TripSearchFilters, TripStop, TripStopInput, UpdateTripInput } from '../types';
+import { parseGoogleMapsPlace } from '../utils/googleMaps';
 
 const demoMode = import.meta.env.VITE_DEMO_MODE !== 'false';
 let demoStore = [...demoTrips];
@@ -288,6 +289,37 @@ export const tripsApi = {
       .sort((left, right) => (left.position ?? 0) - (right.position ?? 0));
     demoStore = demoStore.map((item) => item.id === tripId ? { ...item, stops } : item);
     return stop;
+  },
+
+  async reorderStops(tripId: string, tripStartDate: string, stopIds: string[]): Promise<TripStop[]> {
+    if (!demoMode) {
+      const stops = await apiClient<BackendStop[]>(`/trips/${tripId}/stops/order`, {
+        method: 'PUT',
+        body: JSON.stringify({ stopIds }),
+      });
+      return stops.map((stop) => mapBackendStop(stop, tripStartDate));
+    }
+    await wait(220);
+    const trip = requireDemoTrip(tripId);
+    const stopsById = new Map(trip.stops.map((stop) => [stop.id, stop]));
+    if (stopIds.length !== trip.stops.length || new Set(stopIds).size !== stopIds.length
+      || stopIds.some((stopId) => !stopsById.has(stopId))) {
+      throw new Error('The stop order is no longer current. Refresh the trip and try again.');
+    }
+    const stops = stopIds.map((stopId, position) => ({ ...stopsById.get(stopId)!, position }));
+    demoStore = demoStore.map((item) => item.id === tripId ? { ...item, stops } : item);
+    return stops;
+  },
+
+  async importGoogleMapsPlace(url: string): Promise<ImportedMapPlace> {
+    if (!demoMode) {
+      return apiClient<ImportedMapPlace>('/locations/google-maps/import', {
+        method: 'POST',
+        body: JSON.stringify({ url }),
+      });
+    }
+    await wait(180);
+    return parseGoogleMapsPlace(url);
   },
 
   async deleteStop(tripId: string, stopId: string): Promise<void> {
