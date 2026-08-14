@@ -2,6 +2,7 @@ import { apiClient } from '../../../services/apiClient';
 import { demoTrips } from '../data/demoTrips';
 import type { CreateTripInput, ImportedMapPlace, Trip, TripSearchFilters, TripStop, TripStopInput, UpdateTripInput } from '../types';
 import { parseGoogleMapsPlace } from '../utils/googleMaps';
+import { formatTripDate, localDateKeyFromInstant, tripDayNumber } from '../utils/tripDays';
 
 const demoMode = import.meta.env.VITE_DEMO_MODE !== 'false';
 let demoStore = [...demoTrips];
@@ -13,7 +14,9 @@ interface BackendStop {
   latitude: number;
   longitude: number;
   arrivalTime: string;
+  arrivalLocalDateTime?: string | null;
   departureTime?: string | null;
+  departureLocalDateTime?: string | null;
   category: Trip['stops'][number]['category'];
   rating?: number;
   position: number;
@@ -46,20 +49,24 @@ const wait = (milliseconds: number) =>
   new Promise<void>((resolve) => globalThis.setTimeout(resolve, milliseconds));
 
 function mapBackendStop(stop: BackendStop, tripStartDate: string): TripStop {
-  const tripStart = new Date(`${tripStartDate}T00:00:00Z`);
   const arrival = new Date(stop.arrivalTime);
-  const arrivalDate = new Date(`${stop.arrivalTime.slice(0, 10)}T00:00:00Z`);
-  const day = Math.floor((arrivalDate.getTime() - tripStart.getTime()) / 86_400_000) + 1;
+  const arrivalLocalDateTime = stop.arrivalLocalDateTime?.slice(0, 19) ?? undefined;
+  const departureLocalDateTime = stop.departureLocalDateTime?.slice(0, 19) ?? undefined;
+  const arrivalDateKey = arrivalLocalDateTime?.slice(0, 10) ?? localDateKeyFromInstant(stop.arrivalTime);
+  const arrivalClock = arrivalLocalDateTime?.slice(11, 16)
+    ?? arrival.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
   return {
     id: stop.id,
     name: stop.name,
     description: stop.description ?? '',
     coordinates: [Number(stop.longitude), Number(stop.latitude)],
-    arrivalTime: arrival.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+    arrivalTime: arrivalClock,
     arrivalAt: stop.arrivalTime,
+    arrivalLocalDateTime,
     departureAt: stop.departureTime ?? undefined,
-    dateLabel: arrival.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-    day,
+    departureLocalDateTime,
+    dateLabel: formatTripDate(arrivalDateKey),
+    day: tripDayNumber(arrivalDateKey, tripStartDate) ?? 1,
     category: stop.category,
     rating: stop.rating,
     position: stop.position,
@@ -149,7 +156,9 @@ function toDemoStop(input: TripStopInput, tripStartDate: string, id: string): Tr
       latitude: input.latitude,
       longitude: input.longitude,
       arrivalTime: input.arrivalTime,
+      arrivalLocalDateTime: input.arrivalTime.slice(0, 19),
       departureTime: input.departureTime || null,
+      departureLocalDateTime: input.departureTime?.slice(0, 19) ?? null,
       category: input.category,
       rating: input.rating,
       position: input.position,

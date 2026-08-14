@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
@@ -46,8 +47,14 @@ public class TripStop {
     @Column(name = "arrival_time", nullable = false)
     private OffsetDateTime arrivalTime;
 
+    @Column(name = "arrival_local_datetime")
+    private LocalDateTime arrivalLocalDateTime;
+
     @Column(name = "departure_time")
     private OffsetDateTime departureTime;
+
+    @Column(name = "departure_local_datetime")
+    private LocalDateTime departureLocalDateTime;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
@@ -99,7 +106,9 @@ public class TripStop {
         this.latitude = latitude;
         this.longitude = longitude;
         this.arrivalTime = arrivalTime;
+        this.arrivalLocalDateTime = arrivalTime.toLocalDateTime();
         this.departureTime = departureTime;
+        this.departureLocalDateTime = departureTime == null ? null : departureTime.toLocalDateTime();
         this.category = category;
         this.rating = rating;
         this.position = position;
@@ -117,7 +126,9 @@ public class TripStop {
     public BigDecimal getLatitude() { return latitude; }
     public BigDecimal getLongitude() { return longitude; }
     public OffsetDateTime getArrivalTime() { return arrivalTime; }
+    public LocalDateTime getArrivalLocalDateTime() { return arrivalLocalDateTime; }
     public OffsetDateTime getDepartureTime() { return departureTime; }
+    public LocalDateTime getDepartureLocalDateTime() { return departureLocalDateTime; }
     public StopCategory getCategory() { return category; }
     public Integer getRating() { return rating; }
     public int getPosition() { return position; }

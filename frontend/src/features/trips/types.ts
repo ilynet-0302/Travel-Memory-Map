@@ -25,7 +25,9 @@ export interface TripStop {
   coordinates: [longitude: number, latitude: number];
   arrivalTime: string;
   arrivalAt?: string;
+  arrivalLocalDateTime?: string;
   departureAt?: string;
+  departureLocalDateTime?: string;
   dateLabel: string;
   day: number;
   category: StopCategory;

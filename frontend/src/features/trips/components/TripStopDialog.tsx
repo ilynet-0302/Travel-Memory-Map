@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Clock3, Link2, MapPin, MapPinned, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { useCreateStop, useGoogleMapsImport, useUpdateStop } from '../hooks/useTrips';
 import type { StopCategory, Trip, TripStop } from '../types';
+import { formatTripDate, tripDayNumber } from '../utils/tripDays';
 
 const stopCategories: StopCategory[] = [
   'LANDMARK', 'RESTAURANT', 'HOTEL', 'AIRPORT', 'BEACH', 'MUSEUM',
@@ -50,10 +51,24 @@ function offsetDateTime(value: string) {
 }
 
 function inferredArrival(trip: Trip, stop: TripStop) {
+  if (stop.arrivalLocalDateTime) return stop.arrivalLocalDateTime.slice(0, 16);
   if (stop.arrivalAt) return dateTimeLocal(stop.arrivalAt);
   const date = new Date(`${trip.startDate}T00:00:00`);
   date.setDate(date.getDate() + stop.day - 1);
   return `${dateTimeLocal(date.toISOString()).slice(0, 10)}T${stop.arrivalTime}`;
+}
+
+function timingHint(value: string, trip: Trip) {
+  if (!value) return null;
+  const dateKey = value.slice(0, 10);
+  const day = tripDayNumber(dateKey, trip.startDate);
+  const lastDay = tripDayNumber(trip.endDate, trip.startDate) ?? 1;
+  if (day === null) return null;
+  return {
+    day,
+    label: formatTripDate(dateKey),
+    outsideTrip: day < 1 || day > lastDay,
+  };
 }
 
 export function TripStopDialog({ open, trip, stop, onClose }: TripStopDialogProps) {
@@ -63,9 +78,15 @@ export function TripStopDialog({ open, trip, stop, onClose }: TripStopDialogProp
   const mutation = stop ? updateStop : createStop;
   const [mapsUrl, setMapsUrl] = useState('');
   const [mapsError, setMapsError] = useState<string | null>(null);
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<StopForm>({
+  const { control, register, handleSubmit, reset, setValue, formState: { errors } } = useForm<StopForm>({
     resolver: zodResolver(stopSchema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
   });
+  const arrivalValue = useWatch({ control, name: 'arrivalTime' }) ?? '';
+  const departureValue = useWatch({ control, name: 'departureTime' }) ?? '';
+  const arrivalHint = timingHint(arrivalValue, trip);
+  const departureHint = timingHint(departureValue, trip);
   const close = useCallback(() => {
     setMapsUrl('');
     setMapsError(null);
@@ -80,7 +101,8 @@ export function TripStopDialog({ open, trip, stop, onClose }: TripStopDialogProp
       latitude: String(stop.coordinates[1]),
       longitude: String(stop.coordinates[0]),
       arrivalTime: inferredArrival(trip, stop),
-      departureTime: stop.departureAt ? dateTimeLocal(stop.departureAt) : '',
+      departureTime: stop.departureLocalDateTime?.slice(0, 16)
+        ?? (stop.departureAt ? dateTimeLocal(stop.departureAt) : ''),
       category: stop.category,
       rating: stop.rating ? String(stop.rating) : '',
     } : {
@@ -166,8 +188,8 @@ export function TripStopDialog({ open, trip, stop, onClose }: TripStopDialogProp
           <label className="field field--full"><span>Description</span><textarea rows={3} placeholder="What made this stop memorable?" {...register('description')} />{errors.description && <small className="field__error">{errors.description.message}</small>}</label>
           <label className="field"><span>Latitude</span><span className="input-with-icon"><MapPin size={17} /><input inputMode="decimal" placeholder="41.8902" {...register('latitude')} /></span>{errors.latitude && <small className="field__error">{errors.latitude.message}</small>}</label>
           <label className="field"><span>Longitude</span><input inputMode="decimal" placeholder="12.4922" {...register('longitude')} />{errors.longitude && <small className="field__error">{errors.longitude.message}</small>}</label>
-          <label className="field"><span>Arrival</span><span className="input-with-icon"><Clock3 size={17} /><input type="datetime-local" min={`${trip.startDate}T00:00`} max={`${trip.endDate}T23:59`} {...register('arrivalTime')} /></span>{errors.arrivalTime && <small className="field__error">{errors.arrivalTime.message}</small>}</label>
-          <label className="field"><span>Departure (optional)</span><input type="datetime-local" min={`${trip.startDate}T00:00`} max={`${trip.endDate}T23:59`} {...register('departureTime')} />{errors.departureTime && <small className="field__error">{errors.departureTime.message}</small>}</label>
+          <label className="field"><span>Arrival</span><span className="input-with-icon"><Clock3 size={17} /><input type="datetime-local" min={`${trip.startDate}T00:00`} max={`${trip.endDate}T23:59`} {...register('arrivalTime')} /></span>{arrivalHint && <small className={`field__hint${arrivalHint.outsideTrip ? ' field__hint--error' : ''}`}><strong>{arrivalHint.outsideTrip ? 'Outside trip' : `Day ${arrivalHint.day}`}</strong><span>{arrivalHint.label}</span></small>}{errors.arrivalTime && <small className="field__error">{errors.arrivalTime.message}</small>}</label>
+          <label className="field"><span>Departure (optional)</span><input type="datetime-local" min={arrivalValue || `${trip.startDate}T00:00`} max={`${trip.endDate}T23:59`} {...register('departureTime')} />{departureHint ? <small className={`field__hint${departureHint.outsideTrip ? ' field__hint--error' : ''}`}><strong>{departureHint.outsideTrip ? 'Outside trip' : `Day ${departureHint.day}`}</strong><span>{departureHint.label}</span></small> : <small className="field__hint"><span>Leave empty for a single moment.</span></small>}{errors.departureTime && <small className="field__error">{errors.departureTime.message}</small>}</label>
           <label className="field"><span>Category</span><select {...register('category')}>{stopCategories.map((category) => <option key={category} value={category}>{category.toLowerCase()}</option>)}</select></label>
           <label className="field"><span>Rating (1–10)</span><input type="number" min="1" max="10" {...register('rating')} />{errors.rating && <small className="field__error">{errors.rating.message}</small>}</label>
           {mutation.error && <p className="form-error">{mutation.error.message}</p>}

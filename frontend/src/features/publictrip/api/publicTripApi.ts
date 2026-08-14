@@ -1,6 +1,7 @@
 import { ApiError, apiClient } from '../../../services/apiClient';
 import { tripsApi } from '../../trips/api/tripsApi';
 import type { StopCategory, Trip } from '../../trips/types';
+import { formatTripDate, localDateKeyFromInstant, tripDayNumber } from '../../trips/utils/tripDays';
 import type { PublicTrip } from '../types';
 
 const demoMode = import.meta.env.VITE_DEMO_MODE !== 'false';
@@ -12,7 +13,9 @@ interface BackendPublicStop {
   latitude: number;
   longitude: number;
   arrivalTime: string;
+  arrivalLocalDateTime: string | null;
   departureTime: string | null;
+  departureLocalDateTime: string | null;
   category: StopCategory;
   rating: number | null;
   position: number;
@@ -23,19 +26,23 @@ interface BackendPublicTrip extends Omit<PublicTrip, 'stops'> {
 }
 
 function mapStop(stop: BackendPublicStop, startDate: string) {
-  const start = new Date(`${startDate}T00:00:00Z`);
-  const arrivalDate = new Date(`${stop.arrivalTime.slice(0, 10)}T00:00:00Z`);
   const arrival = new Date(stop.arrivalTime);
+  const arrivalLocalDateTime = stop.arrivalLocalDateTime?.slice(0, 19) ?? undefined;
+  const departureLocalDateTime = stop.departureLocalDateTime?.slice(0, 19) ?? undefined;
+  const arrivalDateKey = arrivalLocalDateTime?.slice(0, 10) ?? localDateKeyFromInstant(stop.arrivalTime);
   return {
     id: stop.id,
     name: stop.name,
     description: stop.description ?? '',
     coordinates: [Number(stop.longitude), Number(stop.latitude)] as [number, number],
-    arrivalTime: arrival.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+    arrivalTime: arrivalLocalDateTime?.slice(11, 16)
+      ?? arrival.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
     arrivalAt: stop.arrivalTime,
+    arrivalLocalDateTime,
     departureAt: stop.departureTime ?? undefined,
-    dateLabel: arrival.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
-    day: Math.floor((arrivalDate.getTime() - start.getTime()) / 86_400_000) + 1,
+    departureLocalDateTime,
+    dateLabel: formatTripDate(arrivalDateKey),
+    day: tripDayNumber(arrivalDateKey, startDate) ?? 1,
     category: stop.category,
     rating: stop.rating ?? undefined,
     position: stop.position,
