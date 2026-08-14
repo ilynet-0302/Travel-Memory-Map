@@ -1,9 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Clock3, MapPin, X } from 'lucide-react';
-import { useEffect } from 'react';
+import { Clock3, Link2, MapPin, MapPinned, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useCreateStop, useUpdateStop } from '../hooks/useTrips';
+import { useCreateStop, useGoogleMapsImport, useUpdateStop } from '../hooks/useTrips';
 import type { StopCategory, Trip, TripStop } from '../types';
 
 const stopCategories: StopCategory[] = [
@@ -20,7 +20,6 @@ const stopSchema = z.object({
   departureTime: z.string(),
   category: z.enum(stopCategories),
   rating: z.string().refine((value) => value === '' || (Number(value) >= 1 && Number(value) <= 10), 'Rating must be from 1 to 10.'),
-  position: z.string().refine((value) => Number.isInteger(Number(value)) && Number(value) >= 0, 'Position cannot be negative.'),
 }).refine(({ arrivalTime, departureTime }) => !departureTime || departureTime >= arrivalTime, {
   path: ['departureTime'],
   message: 'Departure cannot be before arrival.',
@@ -60,10 +59,18 @@ function inferredArrival(trip: Trip, stop: TripStop) {
 export function TripStopDialog({ open, trip, stop, onClose }: TripStopDialogProps) {
   const createStop = useCreateStop(trip.id, trip.startDate);
   const updateStop = useUpdateStop(trip.id, trip.startDate);
+  const googleMapsImport = useGoogleMapsImport();
   const mutation = stop ? updateStop : createStop;
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<StopForm>({
+  const [mapsUrl, setMapsUrl] = useState('');
+  const [mapsError, setMapsError] = useState<string | null>(null);
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<StopForm>({
     resolver: zodResolver(stopSchema),
   });
+  const close = useCallback(() => {
+    setMapsUrl('');
+    setMapsError(null);
+    onClose();
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -76,7 +83,6 @@ export function TripStopDialog({ open, trip, stop, onClose }: TripStopDialogProp
       departureTime: stop.departureAt ? dateTimeLocal(stop.departureAt) : '',
       category: stop.category,
       rating: stop.rating ? String(stop.rating) : '',
-      position: String(stop.position ?? trip.stops.findIndex(({ id }) => id === stop.id)),
     } : {
       name: '',
       description: '',
@@ -86,10 +92,9 @@ export function TripStopDialog({ open, trip, stop, onClose }: TripStopDialogProp
       departureTime: '',
       category: 'LANDMARK',
       rating: '',
-      position: String(trip.stops.length),
     });
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') close();
     };
     document.addEventListener('keydown', onKeyDown);
     document.body.classList.add('is-modal-open');
@@ -97,7 +102,7 @@ export function TripStopDialog({ open, trip, stop, onClose }: TripStopDialogProp
       document.removeEventListener('keydown', onKeyDown);
       document.body.classList.remove('is-modal-open');
     };
-  }, [onClose, open, reset, stop, trip]);
+  }, [close, open, reset, stop, trip]);
 
   if (!open) return null;
 
@@ -111,25 +116,52 @@ export function TripStopDialog({ open, trip, stop, onClose }: TripStopDialogProp
       departureTime: values.departureTime ? offsetDateTime(values.departureTime) : undefined,
       category: values.category,
       rating: values.rating ? Number(values.rating) : undefined,
-      position: Number(values.position),
+      position: stop?.position ?? trip.stops.length,
     };
     try {
       if (stop) await updateStop.mutateAsync({ stopId: stop.id, input });
       else await createStop.mutateAsync(input);
-      onClose();
+      close();
     } catch {
       return;
     }
   });
 
+  const importFromGoogleMaps = async () => {
+    if (!mapsUrl.trim()) {
+      setMapsError('Paste a Google Maps link first.');
+      return;
+    }
+    setMapsError(null);
+    try {
+      const place = await googleMapsImport.mutateAsync(mapsUrl);
+      if (place.name !== 'Imported place') setValue('name', place.name, { shouldValidate: true, shouldDirty: true });
+      setValue('latitude', String(place.latitude), { shouldValidate: true, shouldDirty: true });
+      setValue('longitude', String(place.longitude), { shouldValidate: true, shouldDirty: true });
+    } catch (error) {
+      setMapsError(error instanceof Error ? error.message : 'The Google Maps link could not be imported.');
+    }
+  };
+
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+    <div className="modal-backdrop" role="presentation" onMouseDown={close}>
       <section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="stop-dialog-title" onMouseDown={(event) => event.stopPropagation()}>
         <header className="modal-card__header">
           <div><span className="eyebrow">ITINERARY</span><h2 id="stop-dialog-title">{stop ? 'Edit this place' : 'Add a place'}</h2></div>
-          <button className="icon-button" type="button" onClick={onClose} aria-label="Close dialog"><X size={20} /></button>
+          <button className="icon-button" type="button" onClick={close} aria-label="Close dialog"><X size={20} /></button>
         </header>
         <form className="trip-form" onSubmit={submit}>
+          <section className="maps-import field--full" aria-label="Import from Google Maps">
+            <span className="maps-import__icon"><MapPinned size={20} /></span>
+            <span className="maps-import__copy"><strong>Import from Google Maps</strong><small>Paste a place link to fill its name and coordinates.</small></span>
+            <span className="maps-import__controls">
+              <span className="input-with-icon"><Link2 size={16} /><input type="url" value={mapsUrl} onChange={(event) => setMapsUrl(event.target.value)} placeholder="https://maps.app.goo.gl/…" /></span>
+              <button className="button button--dark" type="button" disabled={googleMapsImport.isPending} onClick={() => void importFromGoogleMaps()}>
+                {googleMapsImport.isPending ? 'Importing…' : 'Import'}
+              </button>
+            </span>
+            {mapsError && <small className="field__error maps-import__error">{mapsError}</small>}
+          </section>
           <label className="field field--full"><span>Place name</span><input autoFocus placeholder="Colosseum" {...register('name')} />{errors.name && <small className="field__error">{errors.name.message}</small>}</label>
           <label className="field field--full"><span>Description</span><textarea rows={3} placeholder="What made this stop memorable?" {...register('description')} />{errors.description && <small className="field__error">{errors.description.message}</small>}</label>
           <label className="field"><span>Latitude</span><span className="input-with-icon"><MapPin size={17} /><input inputMode="decimal" placeholder="41.8902" {...register('latitude')} /></span>{errors.latitude && <small className="field__error">{errors.latitude.message}</small>}</label>
@@ -138,10 +170,9 @@ export function TripStopDialog({ open, trip, stop, onClose }: TripStopDialogProp
           <label className="field"><span>Departure (optional)</span><input type="datetime-local" min={`${trip.startDate}T00:00`} max={`${trip.endDate}T23:59`} {...register('departureTime')} />{errors.departureTime && <small className="field__error">{errors.departureTime.message}</small>}</label>
           <label className="field"><span>Category</span><select {...register('category')}>{stopCategories.map((category) => <option key={category} value={category}>{category.toLowerCase()}</option>)}</select></label>
           <label className="field"><span>Rating (1–10)</span><input type="number" min="1" max="10" {...register('rating')} />{errors.rating && <small className="field__error">{errors.rating.message}</small>}</label>
-          <label className="field"><span>Timeline position</span><input type="number" min="0" {...register('position')} />{errors.position && <small className="field__error">{errors.position.message}</small>}</label>
           {mutation.error && <p className="form-error">{mutation.error.message}</p>}
           <footer className="modal-card__footer field--full">
-            <button className="button button--ghost" type="button" onClick={onClose}>Cancel</button>
+            <button className="button button--ghost" type="button" onClick={close}>Cancel</button>
             <button className="button button--coral" type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Saving…' : stop ? 'Save place' : 'Add place'}</button>
           </footer>
         </form>

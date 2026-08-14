@@ -112,6 +112,24 @@ export function useUpdateStop(tripId: string, tripStartDate: string) {
   });
 }
 
+export function useReorderStops(tripId: string, tripStartDate: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (stopIds: string[]) => tripsApi.reorderStops(tripId, tripStartDate, stopIds),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
+        queryClient.invalidateQueries({ queryKey: tripKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['trip-replay', tripId] }),
+      ]);
+    },
+  });
+}
+
+export function useGoogleMapsImport() {
+  return useMutation({ mutationFn: tripsApi.importGoogleMapsPlace });
+}
+
 export function useDeleteStop(tripId: string) {
   const queryClient = useQueryClient();
   return useMutation({

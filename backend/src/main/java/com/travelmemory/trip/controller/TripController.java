@@ -5,6 +5,7 @@ import com.travelmemory.membership.dto.UpdateMemberRoleRequest;
 import com.travelmemory.membership.service.TripMemberService;
 import com.travelmemory.trip.dto.CreateTripRequest;
 import com.travelmemory.trip.dto.CreateTripStopRequest;
+import com.travelmemory.trip.dto.ReorderTripStopsRequest;
 import com.travelmemory.trip.dto.TripDetailsResponse;
 import com.travelmemory.trip.dto.TripStopResponse;
 import com.travelmemory.trip.dto.TripSummaryResponse;
@@ -103,6 +104,13 @@ public class TripController {
     @GetMapping("/{tripId}/stops")
     public List<TripStopResponse> listStops(@PathVariable UUID tripId) {
         return tripStopService.listStops(tripId);
+    }
+
+    @PutMapping("/{tripId}/stops/order")
+    public List<TripStopResponse> reorderStops(
+            @PathVariable UUID tripId,
+            @Valid @RequestBody ReorderTripStopsRequest request) {
+        return tripStopService.reorderStops(tripId, request);
     }
 
     @PutMapping("/{tripId}/stops/{stopId}")

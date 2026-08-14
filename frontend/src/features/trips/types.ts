@@ -101,3 +101,10 @@ export interface TripStopInput {
   rating?: number;
   position: number;
 }
+
+export interface ImportedMapPlace {
+  name: string;
+  latitude: number;
+  longitude: number;
+  resolvedUrl: string;
+}

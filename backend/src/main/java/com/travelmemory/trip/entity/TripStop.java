@@ -105,6 +105,10 @@ public class TripStop {
         this.position = position;
     }
 
+    public void moveToPosition(int position) {
+        this.position = position;
+    }
+
     public UUID getId() { return id; }
     public Trip getTrip() { return trip; }
     public UserProfile getCreatedBy() { return createdBy; }

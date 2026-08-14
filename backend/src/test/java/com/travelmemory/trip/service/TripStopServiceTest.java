@@ -3,8 +3,10 @@ package com.travelmemory.trip.service;
 import com.travelmemory.auth.AuthenticatedUser;
 import com.travelmemory.auth.AuthenticatedUserProvider;
 import com.travelmemory.exception.InvalidTripDateException;
+import com.travelmemory.exception.InvalidTripStopOrderException;
 import com.travelmemory.membership.service.TripPermissionService;
 import com.travelmemory.trip.dto.TripStopResponse;
+import com.travelmemory.trip.dto.ReorderTripStopsRequest;
 import com.travelmemory.trip.dto.UpdateTripStopRequest;
 import com.travelmemory.trip.entity.StopCategory;
 import com.travelmemory.trip.entity.Trip;
@@ -22,6 +24,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -126,6 +129,41 @@ class TripStopServiceTest {
         assertThatThrownBy(() -> service.updateStop(trip.getId(), stop.getId(), request))
                 .isInstanceOf(InvalidTripDateException.class);
         verify(stopRepository, never()).findByIdAndTripId(stop.getId(), trip.getId());
+    }
+
+    @Test
+    void editorCanReorderEveryStopInOneTransaction() {
+        UserProfile editor = new UserProfile(editorIdentity.id(), editorIdentity.email(), editorIdentity.displayName());
+        TripStop second = new TripStop(
+                trip,
+                editor,
+                "Roman Forum",
+                null,
+                new BigDecimal("41.892500"),
+                new BigDecimal("12.485300"),
+                time(2026, 9, 12, 16, 0),
+                null,
+                StopCategory.LANDMARK,
+                null,
+                1);
+        when(stopRepository.findByTripIdForUpdate(trip.getId())).thenReturn(List.of(stop, second));
+        when(stopMapper.toResponse(second)).thenReturn(mock(TripStopResponse.class));
+        when(stopMapper.toResponse(stop)).thenReturn(mock(TripStopResponse.class));
+
+        service.reorderStops(trip.getId(), new ReorderTripStopsRequest(List.of(second.getId(), stop.getId())));
+
+        assertThat(second.getPosition()).isZero();
+        assertThat(stop.getPosition()).isEqualTo(1);
+        verify(permissionService).requireEditorOrOwner(trip, editorIdentity.id());
+    }
+
+    @Test
+    void reorderRejectsDuplicateOrMissingStopIds() {
+        when(stopRepository.findByTripIdForUpdate(trip.getId())).thenReturn(List.of(stop));
+
+        assertThatThrownBy(() -> service.reorderStops(
+                trip.getId(), new ReorderTripStopsRequest(List.of(stop.getId(), stop.getId()))))
+                .isInstanceOf(InvalidTripStopOrderException.class);
     }
 
     private OffsetDateTime time(int year, int month, int day, int hour, int minute) {
