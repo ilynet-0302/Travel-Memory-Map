@@ -57,6 +57,9 @@ erDiagram
       numeric latitude
       numeric longitude
       timestamptz arrival_time
+      timestamptz departure_time
+      timestamp arrival_local_datetime
+      timestamp departure_local_datetime
       varchar category
       int position
     }

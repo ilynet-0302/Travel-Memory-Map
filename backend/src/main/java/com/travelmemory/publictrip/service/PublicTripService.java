@@ -94,7 +94,9 @@ public class PublicTripService {
     private PublicTripStopResponse stop(TripStop stop) {
         return new PublicTripStopResponse(
                 stop.getId(), stop.getName(), stop.getDescription(), stop.getLatitude(), stop.getLongitude(),
-                stop.getArrivalTime(), stop.getDepartureTime(), stop.getCategory(), stop.getRating(), stop.getPosition());
+                stop.getArrivalTime(), stop.getArrivalLocalDateTime(),
+                stop.getDepartureTime(), stop.getDepartureLocalDateTime(),
+                stop.getCategory(), stop.getRating(), stop.getPosition());
     }
 
     private PublicTripPhotoResponse photo(Photo photo) {

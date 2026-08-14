@@ -99,6 +99,8 @@ class TripStopServiceTest {
         assertThat(response).isSameAs(mapped);
         assertThat(stop.getName()).isEqualTo("Roman Forum");
         assertThat(stop.getDescription()).isEqualTo("Sunset walk");
+        assertThat(stop.getArrivalLocalDateTime()).isEqualTo(request.arrivalTime().toLocalDateTime());
+        assertThat(stop.getDepartureLocalDateTime()).isEqualTo(request.departureTime().toLocalDateTime());
         assertThat(stop.getPosition()).isEqualTo(2);
         verify(permissionService).requireEditorOrOwner(trip, editorIdentity.id());
     }
