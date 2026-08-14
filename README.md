@@ -6,9 +6,35 @@ It is a production-shaped portfolio project that separates the frontend experien
 
 ## Preview
 
-![Travel Memory Map preview](frontend/public/og.png)
+<p align="center">
+  <a href="https://ilynet-0302.github.io/Travel-Memory-Map/">
+    <img src="frontend/public/og.png" width="100%" alt="Travel Memory Map — your journey, replayed">
+  </a>
+</p>
 
-The repository includes automated GitHub Pages and Render deployment configuration. The live URL will be added after the first production deployment.
+<p align="center">
+  <img src="docs/images/travel-memory-world-map.png" width="49%" alt="Interactive world scratch map">
+  <img src="docs/images/travel-memory-profile.png" width="49%" alt="Travel profile and Trip DNA">
+</p>
+
+<details>
+  <summary><strong>More from the travel dashboard</strong></summary>
+  <br>
+  <img src="docs/images/travel-memory-dashboard-stories.png" width="100%" alt="Travel dashboard stories and collaboration insights">
+</details>
+
+<br>
+
+<p align="center">
+  <a href="https://ilynet-0302.github.io/Travel-Memory-Map/">
+    <img src="https://img.shields.io/badge/Live_App-ef6f57?style=for-the-badge&logo=githubpages&logoColor=white" alt="Open the live application">
+  </a>
+  <a href="https://github.com/ilynet-0302/Travel-Memory-Map">
+    <img src="https://img.shields.io/badge/Source_Code-20392f?style=for-the-badge&logo=github&logoColor=white" alt="View the source code">
+  </a>
+</p>
+
+The frontend is deployed through GitHub Pages, while the Spring Boot API runs on Render with Supabase providing PostgreSQL, authentication and private photo storage.
 
 ## Features
 
