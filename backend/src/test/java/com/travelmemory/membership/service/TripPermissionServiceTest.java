@@ -44,10 +44,14 @@ class TripPermissionServiceTest {
     }
 
     @Test
-    void publicTripIsVisibleWithoutMembership() {
+    void publicTripUsesDedicatedPublicApiAndDoesNotExposeMemberApiToStranger() {
         Trip trip = trip(TripVisibility.PUBLIC);
+        UUID strangerId = UUID.randomUUID();
+        when(tripMemberRepository.existsByTripIdAndUserId(trip.getId(), strangerId)).thenReturn(false);
 
-        assertThat(permissionService.canViewTrip(trip, UUID.randomUUID())).isTrue();
+        assertThat(permissionService.canViewTrip(trip, strangerId)).isFalse();
+        assertThatThrownBy(() -> permissionService.requireViewAccess(trip, strangerId))
+                .isInstanceOf(TripAccessDeniedException.class);
     }
 
     @Test

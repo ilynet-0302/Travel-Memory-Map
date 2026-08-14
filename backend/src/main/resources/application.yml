@@ -24,6 +24,7 @@ spring:
           issuer-uri: ${SUPABASE_AUTH_ISSUER:http://localhost:54321/auth/v1}
           jwk-set-uri: ${SUPABASE_JWKS_URI:http://localhost:54321/auth/v1/.well-known/jwks.json}
           jws-algorithms: ${SUPABASE_JWS_ALGORITHMS:ES256}
+          audiences: ${SUPABASE_AUTH_AUDIENCE:authenticated}
   servlet:
     multipart:
       max-file-size: 10MB
@@ -31,8 +32,18 @@ spring:
 
 server:
   port: ${PORT:8080}
+  forward-headers-strategy: framework
   error:
     include-message: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 app:
   cors:
@@ -41,6 +52,14 @@ app:
     url: ${SUPABASE_URL:${VITE_SUPABASE_URL:http://localhost:54321}}
     publishable-key: ${SUPABASE_PUBLISHABLE_KEY:${VITE_SUPABASE_PUBLISHABLE_KEY:local-publishable-key}}
     photo-bucket: ${SUPABASE_PHOTO_BUCKET:trip-photos}
+    signed-url-ttl-seconds: ${SUPABASE_SIGNED_URL_TTL_SECONDS:900}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    public-requests-per-minute: ${PUBLIC_RATE_LIMIT_PER_MINUTE:60}
+    invite-previews-per-minute: ${INVITE_PREVIEW_RATE_LIMIT_PER_MINUTE:30}
+    uploads-per-hour: ${PHOTO_UPLOAD_RATE_LIMIT_PER_HOUR:30}
+    invites-per-hour: ${INVITE_CREATE_RATE_LIMIT_PER_HOUR:30}
+    replays-per-minute: ${REPLAY_RATE_LIMIT_PER_MINUTE:30}
   routing:
     enabled: ${ROUTING_ENABLED:false}
     base-url: ${ROUTING_BASE_URL:https://router.project-osrm.org}

@@ -4,7 +4,6 @@ import com.travelmemory.exception.TripAccessDeniedException;
 import com.travelmemory.membership.entity.TripRole;
 import com.travelmemory.membership.repository.TripMemberRepository;
 import com.travelmemory.trip.entity.Trip;
-import com.travelmemory.trip.entity.TripVisibility;
 import org.springframework.stereotype.Service;
 
 import java.util.EnumSet;
@@ -20,8 +19,7 @@ public class TripPermissionService {
     }
 
     public boolean canViewTrip(Trip trip, UUID userId) {
-        return trip.getVisibility() == TripVisibility.PUBLIC
-                || trip.getOwner().getId().equals(userId)
+        return trip.getOwner().getId().equals(userId)
                 || tripMemberRepository.existsByTripIdAndUserId(trip.getId(), userId);
     }
 
