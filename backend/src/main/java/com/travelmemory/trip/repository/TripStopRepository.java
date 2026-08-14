@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public interface TripStopRepository extends JpaRepository<TripStop, UUID> {
     List<TripStop> findByTripIdOrderByPositionAsc(UUID tripId);
+    List<TripStop> findByTripIdIn(Collection<UUID> tripIds);
     Optional<TripStop> findByIdAndTripId(UUID stopId, UUID tripId);
     long countByTripId(UUID tripId);
     long countByTripIdIn(Collection<UUID> tripIds);

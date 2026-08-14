@@ -63,4 +63,27 @@ class TripRepositoryIntegrationTest {
 
         assertThat(accessibleTrips).extracting(Trip::getId).containsExactly(trip.getId());
     }
+
+    @Test
+    void publicSlugStopsResolvingWhenTripBecomesPrivate() {
+        UserProfile owner = userProfileRepository.save(new UserProfile(
+                UUID.randomUUID(), "public-owner@integration.test", "Public Owner"));
+        Trip trip = tripRepository.save(new Trip(
+                owner, "Corfu", null, "Greece", "GR", "Corfu",
+                LocalDate.now().minusDays(10), LocalDate.now().minusDays(4), TripVisibility.PUBLIC));
+        String slug = trip.getPublicSlug();
+
+        assertThat(tripRepository.findByPublicSlugAndVisibilityAndStatusNot(
+                slug, TripVisibility.PUBLIC, com.travelmemory.trip.entity.TripStatus.ARCHIVED))
+                .contains(trip);
+
+        trip.updateDetails(
+                trip.getTitle(), trip.getDescription(), trip.getCountry(), trip.getCountryCode(), trip.getCity(),
+                trip.getStartDate(), trip.getEndDate(), TripVisibility.PRIVATE);
+        tripRepository.flush();
+
+        assertThat(tripRepository.findByPublicSlugAndVisibilityAndStatusNot(
+                slug, TripVisibility.PUBLIC, com.travelmemory.trip.entity.TripStatus.ARCHIVED))
+                .isEmpty();
+    }
 }

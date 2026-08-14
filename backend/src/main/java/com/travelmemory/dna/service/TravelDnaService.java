@@ -88,6 +88,10 @@ public class TravelDnaService {
     private TripDnaResponse calculate(Trip trip) {
         List<TripStop> stops = tripStopRepository.findByTripIdOrderByPositionAsc(trip.getId());
         List<Expense> expenses = expenseRepository.findByTripId(trip.getId());
+        return calculate(trip, stops, expenses);
+    }
+
+    public TripDnaResponse calculate(Trip trip, List<TripStop> stops, List<Expense> expenses) {
         long days = Math.max(1, ChronoUnit.DAYS.between(trip.getStartDate(), trip.getEndDate()) + 1);
         double totalStops = Math.max(1, stops.size());
         long distinctCategories = stops.stream()

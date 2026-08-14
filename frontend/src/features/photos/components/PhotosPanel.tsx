@@ -1,8 +1,8 @@
-import { Camera, ImagePlus, MapPin, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { Camera, Eye, EyeOff, ImagePlus, MapPin, Sparkles, Trash2, Upload, X } from 'lucide-react';
 import { useRef, useState, type FormEvent } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
 import type { Trip, TripStop } from '../../trips/types';
-import { useDeletePhoto, useTripPhotos, useUploadPhoto } from '../hooks/usePhotos';
+import { useDeletePhoto, useSetPhotoPublicVisibility, useTripPhotos, useUploadPhoto } from '../hooks/usePhotos';
 import type { TripPhoto } from '../types';
 
 interface PhotosPanelProps {
@@ -33,6 +33,7 @@ export function PhotosPanel({ trip, stops }: PhotosPanelProps) {
   const photos = useTripPhotos(trip.id);
   const uploadPhoto = useUploadPhoto(trip.id);
   const deletePhoto = useDeletePhoto(trip.id);
+  const setPublicVisibility = useSetPhotoPublicVisibility(trip.id);
   const { session, demoMode } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -106,7 +107,9 @@ export function PhotosPanel({ trip, stops }: PhotosPanelProps) {
         <div>
           <span className="eyebrow">TRIP MEMORIES</span>
           <h2>Photos from the journey</h2>
-          <p>Private images use short-lived access links and follow the same trip roles.</p>
+          <p>{trip.visibility === 'PUBLIC'
+            ? 'Choose up to 12 photos to feature on the anonymous public page.'
+            : 'Private images use short-lived access links and follow the same trip roles.'}</p>
         </div>
         <span className="photo-count"><Camera size={16} /> {photos.data?.length ?? 0} photos</span>
       </header>
@@ -174,6 +177,8 @@ export function PhotosPanel({ trip, stops }: PhotosPanelProps) {
         </div>
       )}
 
+      {setPublicVisibility.error && <p className="photo-error" role="alert">{setPublicVisibility.error.message}</p>}
+
       {photos.isLoading ? (
         <div className="photos-empty"><span className="detail-skeleton" /></div>
       ) : photos.error ? (
@@ -181,19 +186,34 @@ export function PhotosPanel({ trip, stops }: PhotosPanelProps) {
       ) : photos.data?.length ? (
         <div className="photo-grid">
           {photos.data.map((photo) => (
-            <article className="photo-card" key={photo.id}>
+            <article className={`photo-card${photo.publicVisible ? ' photo-card--public' : ''}`} key={photo.id}>
               <img src={photo.signedUrl} alt={photo.caption || photo.originalFileName} loading="lazy" />
+              {photo.publicVisible && <span className="photo-card__public-badge"><Eye size={12} /> Public page</span>}
               <div className="photo-card__overlay">
                 <div>
                   <strong>{photo.caption || photo.originalFileName}</strong>
                   <small>{formatPhotoDate(photo.takenAt, photo.createdAt)} · {formatFileSize(photo.fileSize)}</small>
                   <small>By {photo.uploadedByDisplayName}</small>
                 </div>
-                {canDelete(photo) && (
-                  <button type="button" aria-label={`Delete ${photo.originalFileName}`} disabled={deletePhoto.isPending} onClick={() => void confirmDelete(photo)}>
-                    <Trash2 size={16} />
-                  </button>
-                )}
+                <div className="photo-card__actions">
+                  {canUpload && trip.visibility === 'PUBLIC' && (
+                    <button
+                      className="photo-card__visibility"
+                      type="button"
+                      title={photo.publicVisible ? 'Remove from public page' : 'Feature on public page'}
+                      aria-label={photo.publicVisible ? `Remove ${photo.originalFileName} from public page` : `Feature ${photo.originalFileName} on public page`}
+                      disabled={setPublicVisibility.isPending}
+                      onClick={() => setPublicVisibility.mutate({ photoId: photo.id, publicVisible: !photo.publicVisible })}
+                    >
+                      {photo.publicVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  )}
+                  {canDelete(photo) && (
+                    <button type="button" aria-label={`Delete ${photo.originalFileName}`} disabled={deletePhoto.isPending} onClick={() => void confirmDelete(photo)}>
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
             </article>
           ))}

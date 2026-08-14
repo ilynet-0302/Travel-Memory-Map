@@ -13,6 +13,7 @@ export interface TripPhoto {
   latitude: number | null;
   longitude: number | null;
   caption: string | null;
+  publicVisible: boolean;
   createdAt: string;
 }
 

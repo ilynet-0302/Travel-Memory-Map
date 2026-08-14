@@ -8,10 +8,12 @@ import com.travelmemory.exception.TripAccessDeniedException;
 import com.travelmemory.exception.TripStopNotFoundException;
 import com.travelmemory.membership.service.TripPermissionService;
 import com.travelmemory.photo.dto.PhotoResponse;
+import com.travelmemory.photo.dto.UpdatePhotoPublicVisibilityRequest;
 import com.travelmemory.photo.entity.Photo;
 import com.travelmemory.photo.repository.PhotoRepository;
 import com.travelmemory.trip.entity.Trip;
 import com.travelmemory.trip.entity.TripStop;
+import com.travelmemory.trip.entity.TripVisibility;
 import com.travelmemory.trip.repository.TripStopRepository;
 import com.travelmemory.trip.service.TripService;
 import com.travelmemory.user.entity.UserProfile;
@@ -30,6 +32,7 @@ import java.util.UUID;
 public class PhotoService {
 
     private static final long MAX_FILE_SIZE = 10L * 1024 * 1024;
+    private static final long MAX_PUBLIC_PHOTOS = 12;
     private static final Map<String, String> EXTENSIONS = Map.of(
             "image/jpeg", "jpg",
             "image/png", "png",
@@ -135,6 +138,29 @@ public class PhotoService {
         photoRepository.delete(photo);
     }
 
+    @Transactional
+    public PhotoResponse updatePublicVisibility(
+            UUID tripId,
+            UUID photoId,
+            UpdatePhotoPublicVisibilityRequest request) {
+        UUID userId = authenticatedUserProvider.getCurrentUser().id();
+        String accessToken = authenticatedUserProvider.getCurrentAccessToken();
+        Trip trip = tripService.getTripEntity(tripId);
+        tripPermissionService.requireEditorOrOwner(trip, userId);
+        Photo photo = photoRepository.findByIdAndTripId(photoId, tripId)
+                .orElseThrow(() -> new PhotoNotFoundException(photoId));
+        if (request.publicVisible() && trip.getVisibility() != TripVisibility.PUBLIC) {
+            throw new InvalidPhotoException("Only photos from a public trip can appear on its public page.");
+        }
+        if (request.publicVisible()
+                && !photo.isPublicVisible()
+                && photoRepository.countByTripIdAndPublicVisibleTrue(tripId) >= MAX_PUBLIC_PHOTOS) {
+            throw new InvalidPhotoException("A public trip can feature up to 12 photos.");
+        }
+        photo.setPublicVisible(request.publicVisible());
+        return toResponse(photo, storageService.createSignedUrl(photo.getStoragePath(), accessToken));
+    }
+
     private void validate(MultipartFile file, String caption) {
         if (file == null || file.isEmpty()) {
             throw new InvalidPhotoException("Select a non-empty image to upload.");
@@ -214,6 +240,7 @@ public class PhotoService {
                 photo.getLatitude(),
                 photo.getLongitude(),
                 photo.getCaption(),
+                photo.isPublicVisible(),
                 photo.getCreatedAt());
     }
 }

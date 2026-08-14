@@ -1,15 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { dnaKeys } from '../../dna/hooks/useDna';
 import { tripsApi } from '../api/tripsApi';
-import type { TripStopInput, UpdateTripInput } from '../types';
+import type { TripSearchFilters, TripStopInput, UpdateTripInput } from '../types';
 
 export const tripKeys = {
   all: ['trips'] as const,
   detail: (tripId: string) => ['trips', tripId] as const,
+  search: (filters: TripSearchFilters) => ['trips', 'search', filters] as const,
 };
 
 export function useTrips() {
   return useQuery({ queryKey: tripKeys.all, queryFn: tripsApi.list });
+}
+
+export function useTripSearch(filters: TripSearchFilters) {
+  return useQuery({
+    queryKey: tripKeys.search(filters),
+    queryFn: () => tripsApi.search(filters),
+    placeholderData: (previous) => previous,
+  });
 }
 
 export function useTrip(tripId: string) {

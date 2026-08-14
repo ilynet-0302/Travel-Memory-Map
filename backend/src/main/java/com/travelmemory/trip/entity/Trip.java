@@ -110,6 +110,11 @@ public class Trip {
         this.startDate = startDate;
         this.endDate = endDate;
         this.visibility = visibility;
+        if (visibility == TripVisibility.PUBLIC && publicSlug == null) {
+            publicSlug = UUID.randomUUID().toString().replace("-", "");
+        } else if (visibility == TripVisibility.PRIVATE) {
+            publicSlug = null;
+        }
         this.status = calculateStatus(startDate, endDate);
         this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }

@@ -41,3 +41,18 @@ export function useDeletePhoto(tripId: string) {
     },
   });
 }
+
+export function useSetPhotoPublicVisibility(tripId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ photoId, publicVisible }: { photoId: string; publicVisible: boolean }) =>
+      photosApi.setPublicVisibility(tripId, photoId, publicVisible),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: photoKeys.trip(tripId) }),
+        queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) }),
+        queryClient.invalidateQueries({ queryKey: ['profile', 'memories'] }),
+      ]);
+    },
+  });
+}

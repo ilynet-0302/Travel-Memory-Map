@@ -3,10 +3,14 @@ import {
   Archive,
   CalendarDays,
   Camera,
+  Check,
   ChevronRight,
   CircleDollarSign,
   Compass,
+  Copy,
   Clock3,
+  ExternalLink,
+  Globe2,
   LockKeyhole,
   MapPin,
   MoreHorizontal,
@@ -56,6 +60,7 @@ export function TripDetailPage() {
   const [stopDialogOpen, setStopDialogOpen] = useState(false);
   const [selectedStop, setSelectedStop] = useState<TripStop | undefined>();
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const archiveTrip = useArchiveTrip(tripId);
   const deleteTrip = useDeleteTrip(tripId);
   const deleteStop = useDeleteStop(tripId);
@@ -109,6 +114,10 @@ export function TripDetailPage() {
       : replay.data?.routeSource === 'DIRECT_FALLBACK'
         ? 'DIRECT ROUTE FALLBACK'
         : 'ADD PLACES FOR A ROUTE';
+  const publicPath = trip.publicSlug ? `/trips/public/${trip.publicSlug}` : null;
+  const publicUrl = publicPath
+    ? `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, '')}${publicPath}`
+    : null;
 
   const openNewStop = () => {
     setSelectedStop(undefined);
@@ -151,22 +160,45 @@ export function TripDetailPage() {
     }
   };
 
+  const copyPublicLink = async () => {
+    if (!publicUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setShareCopied(true);
+    } catch {
+      window.prompt('Copy this public trip link:', publicUrl);
+    }
+  };
+
   return (
     <div className="page page--trip-detail">
       <div className="trip-detail__topbar">
         <Link to="/trips" className="back-link"><ArrowLeft size={17} /> All trips</Link>
-        {isOwner && (
-          <div className="trip-actions">
-            <button className="button button--ghost" type="button" onClick={() => setEditTripOpen(true)}><Pencil size={16} /> Edit trip</button>
-            <div className="trip-actions__menu-wrap">
-              <button className="icon-button" type="button" aria-label="More trip actions" aria-expanded={actionsOpen} onClick={() => setActionsOpen((open) => !open)}><MoreHorizontal size={20} /></button>
-              {actionsOpen && (
-                <div className="trip-actions__menu">
-                  <button type="button" onClick={() => void confirmArchive()}><Archive size={15} /> Archive trip</button>
-                  <button className="is-danger" type="button" onClick={() => void confirmDeleteTrip()}><Trash2 size={15} /> Delete permanently</button>
+        {(publicPath || isOwner) && (
+          <div className="trip-detail__controls">
+            {publicPath && (
+              <div className="trip-share-actions">
+                <Link className="button button--ghost" to={publicPath} target="_blank"><ExternalLink size={15} /> Public page</Link>
+                <button className="button button--ghost" type="button" onClick={() => void copyPublicLink()}>
+                  {shareCopied ? <Check size={15} /> : <Copy size={15} />}
+                  {shareCopied ? 'Copied' : 'Copy link'}
+                </button>
+              </div>
+            )}
+            {isOwner && (
+              <div className="trip-actions">
+                <button className="button button--ghost" type="button" onClick={() => setEditTripOpen(true)}><Pencil size={16} /> Edit trip</button>
+                <div className="trip-actions__menu-wrap">
+                  <button className="icon-button" type="button" aria-label="More trip actions" aria-expanded={actionsOpen} onClick={() => setActionsOpen((open) => !open)}><MoreHorizontal size={20} /></button>
+                  {actionsOpen && (
+                    <div className="trip-actions__menu">
+                      <button type="button" onClick={() => void confirmArchive()}><Archive size={15} /> Archive trip</button>
+                      <button className="is-danger" type="button" onClick={() => void confirmDeleteTrip()}><Trash2 size={15} /> Delete permanently</button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -181,7 +213,7 @@ export function TripDetailPage() {
           <span className="trip-hero__line" />
         </div>
         <div className="trip-hero__content">
-          <span className="trip-hero__privacy"><LockKeyhole size={14} /> {trip.visibility.toLowerCase()} trip</span>
+          <span className="trip-hero__privacy">{trip.visibility === 'PUBLIC' ? <Globe2 size={14} /> : <LockKeyhole size={14} />} {trip.visibility.toLowerCase()} trip</span>
           <span className="eyebrow eyebrow--light">{trip.city.toUpperCase()} · {trip.country.toUpperCase()}</span>
           <h1>{trip.title}</h1>
           <p>{trip.description}</p>

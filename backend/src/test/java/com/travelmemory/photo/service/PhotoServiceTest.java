@@ -6,6 +6,7 @@ import com.travelmemory.exception.InvalidPhotoException;
 import com.travelmemory.exception.TripAccessDeniedException;
 import com.travelmemory.membership.service.TripPermissionService;
 import com.travelmemory.photo.dto.PhotoResponse;
+import com.travelmemory.photo.dto.UpdatePhotoPublicVisibilityRequest;
 import com.travelmemory.photo.entity.Photo;
 import com.travelmemory.photo.repository.PhotoRepository;
 import com.travelmemory.trip.entity.Trip;
@@ -150,5 +151,43 @@ class PhotoServiceTest {
         assertThatThrownBy(() -> service.delete(trip.getId(), photo.getId()))
                 .isInstanceOf(TripAccessDeniedException.class);
         verify(storageService, never()).delete(any(), any());
+    }
+
+    @Test
+    void editorCanSelectAPhotoForAPublicTripPage() {
+        Trip publicTrip = new Trip(
+                owner, "Rome", null, "Italy", "IT", "Rome",
+                LocalDate.of(2026, 9, 12), LocalDate.of(2026, 9, 16), TripVisibility.PUBLIC);
+        Photo photo = new Photo(
+                UUID.randomUUID(), publicTrip, null, editor, publicTrip.getId() + "/rome.jpg",
+                "rome.jpg", "image/jpeg", 10, null, null, null, "Golden hour");
+        when(userProvider.getCurrentUser()).thenReturn(
+                new AuthenticatedUser(editor.getId(), editor.getEmail(), editor.getDisplayName()));
+        when(tripService.getTripEntity(publicTrip.getId())).thenReturn(publicTrip);
+        when(photoRepository.findByIdAndTripId(photo.getId(), publicTrip.getId())).thenReturn(Optional.of(photo));
+        when(photoRepository.countByTripIdAndPublicVisibleTrue(publicTrip.getId())).thenReturn(0L);
+        when(storageService.createSignedUrl(photo.getStoragePath(), "user-access-token"))
+                .thenReturn("https://signed.example/photo");
+
+        PhotoResponse response = service.updatePublicVisibility(
+                publicTrip.getId(), photo.getId(), new UpdatePhotoPublicVisibilityRequest(true));
+
+        assertThat(response.publicVisible()).isTrue();
+        verify(permissionService).requireEditorOrOwner(publicTrip, editor.getId());
+    }
+
+    @Test
+    void cannotPublishAPhotoWhileTripIsPrivate() {
+        Photo photo = new Photo(
+                UUID.randomUUID(), trip, null, owner, trip.getId() + "/rome.jpg",
+                "rome.jpg", "image/jpeg", 10, null, null, null, null);
+        when(userProvider.getCurrentUser()).thenReturn(
+                new AuthenticatedUser(owner.getId(), owner.getEmail(), owner.getDisplayName()));
+        when(photoRepository.findByIdAndTripId(photo.getId(), trip.getId())).thenReturn(Optional.of(photo));
+
+        assertThatThrownBy(() -> service.updatePublicVisibility(
+                trip.getId(), photo.getId(), new UpdatePhotoPublicVisibilityRequest(true)))
+                .isInstanceOf(InvalidPhotoException.class)
+                .hasMessageContaining("public trip");
     }
 }

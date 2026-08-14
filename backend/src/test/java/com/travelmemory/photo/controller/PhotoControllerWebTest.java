@@ -2,11 +2,13 @@ package com.travelmemory.photo.controller;
 
 import com.travelmemory.config.SecurityConfig;
 import com.travelmemory.photo.dto.PhotoResponse;
+import com.travelmemory.photo.dto.UpdatePhotoPublicVisibilityRequest;
 import com.travelmemory.photo.service.PhotoService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.TestPropertySource;
@@ -28,6 +30,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -91,6 +94,7 @@ class PhotoControllerWebTest {
                         null,
                         null,
                         "Golden hour",
+                        false,
                         createdAt));
 
         mockMvc.perform(multipart("/api/v1/trips/{tripId}/photos", tripId)
@@ -102,6 +106,23 @@ class PhotoControllerWebTest {
                 .andExpect(jsonPath("$.caption").value("Golden hour"));
 
         verify(photoService).upload(eq(tripId), isNull(), eq("Golden hour"), any());
+    }
+
+    @Test
+    void authenticatedEditorCanSelectAPublicPhoto() throws Exception {
+        UUID tripId = UUID.randomUUID();
+        UUID photoId = UUID.randomUUID();
+
+        mockMvc.perform(patch("/api/v1/trips/{tripId}/photos/{photoId}/public-visibility", tripId, photoId)
+                        .with(authenticatedJwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                { "publicVisible": true }
+                                """))
+                .andExpect(status().isOk());
+
+        verify(photoService).updatePublicVisibility(
+                tripId, photoId, new UpdatePhotoPublicVisibilityRequest(true));
     }
 
     private org.springframework.test.web.servlet.request.RequestPostProcessor authenticatedJwt() {

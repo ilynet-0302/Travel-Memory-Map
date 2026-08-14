@@ -9,7 +9,8 @@ This repository is being built as a production-shaped portfolio project. It sepa
 The trip, collaboration and photo vertical slices are implemented:
 
 - responsive dashboard with realistic travel summaries;
-- trip search and filters;
+- authenticated server-side search across trips, countries, cities, places and years;
+- advanced trip filters for status, rating, price/currency, duration, Trip DNA and owner/shared relationship;
 - create-trip flow with React Hook Form and Zod;
 - editable authenticated travel profile with backend-derived trip statistics;
 - owner trip editing, archiving and permanent deletion;
@@ -24,11 +25,11 @@ The trip, collaboration and photo vertical slices are implemented:
 - private Supabase Storage photo gallery with upload, signed previews and deletion;
 - JPEG/PNG/WebP validation, 10 MB limits, EXIF time/GPS extraction and stop association;
 - photo counts in trips and backend-derived profile statistics;
-- Spring Boot API for trips, stops, members, invitations and photos;
+- Spring Boot API for trips, search, stops, members, invitations, photos, expenses and public sharing;
 - Supabase JWT verification through Spring Security Resource Server;
 - centralized OWNER / EDITOR / VIEWER permission checks;
 - PostgreSQL schema managed by Flyway;
-- invitation, permission, profile, photo, statistics and HTTP security tests plus a Docker-aware Testcontainers integration test.
+- invitation, permission, search, profile, photo, statistics and HTTP security tests plus Docker-aware Testcontainers integration tests.
 
 The UI starts in demo mode so it is immediately explorable before Supabase credentials and the API are configured. Demo mode supports the same trip and stop lifecycle as the current backend slice.
 
@@ -46,7 +47,7 @@ Private does not mean single-user. A private trip is visible only to its owner a
 
 ### Travel intelligence
 
-Later phases derive trip statistics, deterministic Trip DNA, travel personality, comparisons and a world scratch map from the same domain data.
+Trip statistics, deterministic Trip DNA, travel personality, comparisons, search filters and the world scratch map are derived from the same authoritative domain data.
 
 ## Architecture
 

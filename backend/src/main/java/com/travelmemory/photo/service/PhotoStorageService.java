@@ -75,6 +75,10 @@ public class PhotoStorageService {
         }
     }
 
+    public String createPublicSignedUrl(String path) {
+        return createSignedUrl(path, publishableKey);
+    }
+
     public void delete(String path, String accessToken) {
         try {
             restClient.method(HttpMethod.DELETE)
