@@ -13,18 +13,12 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>travel-memory-api</name>
 	<description>Travel Memory Map API</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
+	<url>https://github.com/ilynet-0302/Travel-Memory-Map</url>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:https://github.com/ilynet-0302/Travel-Memory-Map.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/ilynet-0302/Travel-Memory-Map.git</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/ilynet-0302/Travel-Memory-Map</url>
 	</scm>
 	<properties>
 		<java.version>21</java.version>

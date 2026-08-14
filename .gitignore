@@ -1,25 +1,41 @@
-# Secrets
+# Secrets and machine-local configuration
 .env
 .env.*
 !.env.example
 application-local.yml
 application-local.properties
 
-# Frontend
-frontend/node_modules/
-frontend/dist/
-frontend/.cache/
-frontend/*.log
+# Dependencies, build output and tool caches
+node_modules/
+target/
+dist/
+coverage/
+.cache/
+.vite/
+.m2/
 
-# Backend
-backend/target/
-backend/.idea/
-backend/*.iml
-backend/*.log
+# Logs and local runtime state
+*.log
+*.log.*
+*.pid
+*.pid.lock
+hs_err_pid*
 runtime-logs/
 
 # OS / editors
 .DS_Store
 Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
 .idea/
 .vscode/
+*.iml
+.classpath
+.project
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+.sts4-cache/

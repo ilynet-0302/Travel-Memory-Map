@@ -1643,9 +1643,7 @@ h3 {
   background: rgba(255, 255, 255, 0.08);
 }
 
-.empty-state,
-.placeholder-page,
-.tab-placeholder {
+.empty-state {
   display: flex;
   min-height: 54vh;
   align-items: center;
@@ -1997,9 +1995,7 @@ h3 {
   line-height: 1.6;
 }
 
-.empty-state > span,
-.placeholder-page__orb,
-.tab-placeholder > span {
+.empty-state > span {
   display: grid;
   width: 64px;
   height: 64px;
@@ -2010,18 +2006,14 @@ h3 {
   background: #f4e1d8;
 }
 
-.empty-state h2,
-.placeholder-page h1,
-.tab-placeholder h2 {
+.empty-state h2 {
   margin-bottom: 8px;
   font-family: 'DM Serif Display', Georgia, serif;
   font-size: 34px;
   font-weight: 400;
 }
 
-.empty-state p,
-.placeholder-page p,
-.tab-placeholder p {
+.empty-state p {
   max-width: 500px;
   margin-bottom: 22px;
   color: var(--muted);
@@ -3845,13 +3837,6 @@ h3 {
 .trip-dna-signals svg {
   flex: 0 0 auto;
   color: var(--coral);
-}
-
-.tab-placeholder {
-  min-height: 430px;
-  border: 1px dashed #d7d8d1;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 252, 0.44);
 }
 
 .photos-layout {
