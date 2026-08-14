@@ -28,6 +28,25 @@ import static org.mockito.Mockito.when;
 class TripServiceTest {
 
     @Test
+    void publicSlugExistsOnlyWhileTripIsPublic() {
+        UserProfile owner = new UserProfile(UUID.randomUUID(), "owner@example.com", "Owner");
+        Trip trip = new Trip(
+                owner, "Rome", null, "Italy", "IT", "Rome",
+                LocalDate.now().minusDays(5), LocalDate.now().minusDays(1), TripVisibility.PUBLIC);
+        String firstSlug = trip.getPublicSlug();
+
+        trip.updateDetails(
+                "Rome", null, "Italy", "IT", "Rome",
+                trip.getStartDate(), trip.getEndDate(), TripVisibility.PRIVATE);
+        assertThat(trip.getPublicSlug()).isNull();
+
+        trip.updateDetails(
+                "Rome", null, "Italy", "IT", "Rome",
+                trip.getStartDate(), trip.getEndDate(), TripVisibility.PUBLIC);
+        assertThat(trip.getPublicSlug()).isNotBlank().isNotEqualTo(firstSlug);
+    }
+
+    @Test
     void archiveMarksTripArchivedAfterOwnerCheck() {
         TripRepository tripRepository = mock(TripRepository.class);
         TripMemberRepository memberRepository = mock(TripMemberRepository.class);

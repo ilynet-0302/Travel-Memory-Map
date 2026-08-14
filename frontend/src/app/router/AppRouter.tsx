@@ -3,7 +3,6 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '../../components/layout/AppShell';
 import { RequireAuth } from '../../features/auth/components/RequireAuth';
 import { DashboardPage } from '../../pages/DashboardPage';
-import { PlaceholderPage } from '../../pages/PlaceholderPage';
 import { TripsPage } from '../../pages/TripsPage';
 
 const LoginPage = lazy(() => import('../../pages/LoginPage').then((module) => ({ default: module.LoginPage })));
@@ -12,6 +11,8 @@ const JoinTripPage = lazy(() => import('../../pages/JoinTripPage').then((module)
 const ProfilePage = lazy(() => import('../../pages/ProfilePage').then((module) => ({ default: module.ProfilePage })));
 const TripComparisonPage = lazy(() => import('../../pages/TripComparisonPage').then((module) => ({ default: module.TripComparisonPage })));
 const WorldMapPage = lazy(() => import('../../pages/WorldMapPage').then((module) => ({ default: module.WorldMapPage })));
+const PublicTripPage = lazy(() => import('../../pages/PublicTripPage').then((module) => ({ default: module.PublicTripPage })));
+const MemoriesPage = lazy(() => import('../../pages/MemoriesPage').then((module) => ({ default: module.MemoriesPage })));
 
 function PageLoader() {
   return <div className="auth-loading"><span className="auth-loading__mark">◎</span><span>Unfolding the map…</span></div>;
@@ -24,6 +25,7 @@ export function AppRouter() {
         <Routes>
           <Route path="login" element={<LoginPage />} />
           <Route path="join/:inviteToken" element={<JoinTripPage />} />
+          <Route path="trips/public/:publicSlug" element={<PublicTripPage />} />
           <Route element={<RequireAuth />}>
             <Route element={<AppShell />}>
               <Route index element={<DashboardPage />} />
@@ -31,16 +33,7 @@ export function AppRouter() {
               <Route path="trips/:tripId" element={<TripDetailPage />} />
               <Route path="compare" element={<TripComparisonPage />} />
               <Route path="map" element={<WorldMapPage />} />
-              <Route
-                path="memories"
-                element={
-                  <PlaceholderPage
-                    eyebrow="Memories"
-                    title="Every photo has a place"
-                    description="Photo upload, EXIF detection and the memory gallery are part of the next product slice."
-                  />
-                }
-              />
+              <Route path="memories" element={<MemoriesPage />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>

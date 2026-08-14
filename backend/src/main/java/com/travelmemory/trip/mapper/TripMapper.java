@@ -47,6 +47,7 @@ public class TripMapper {
                 trip.getStatus(),
                 trip.getVisibility(),
                 trip.getCoverImageUrl(),
+                trip.getPublicSlug(),
                 currentUserRole,
                 memberCount,
                 photoCount,

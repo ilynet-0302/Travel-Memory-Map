@@ -1,4 +1,4 @@
-import { ArrowUpRight, Camera, LockKeyhole, MapPin, UsersRound } from 'lucide-react';
+import { ArrowUpRight, CalendarDays, Camera, LockKeyhole, MapPin, Sparkles, Star, UsersRound } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDateRange } from '../../../utils/date';
 import type { Trip } from '../types';
@@ -36,6 +36,14 @@ export function TripCard({ trip, featured = false }: TripCardProps) {
           {trip.city}, {trip.country}
         </p>
         <p className="trip-card__dates">{formatDateRange(trip.startDate, trip.endDate)}</p>
+
+        {(trip.averageRating !== undefined || trip.durationDays !== undefined || trip.dominantTrait) && (
+          <div className="trip-card__insights">
+            {trip.averageRating !== undefined && <span><Star size={13} /> {trip.averageRating.toFixed(1)}</span>}
+            {trip.durationDays !== undefined && <span><CalendarDays size={13} /> {trip.durationDays} {trip.durationDays === 1 ? 'day' : 'days'}</span>}
+            {trip.dominantTrait && <span><Sparkles size={13} /> {trip.dominantTrait.toLowerCase().replace('_', ' ')}</span>}
+          </div>
+        )}
 
         {trip.progress !== undefined && featured && (
           <div className="trip-progress">

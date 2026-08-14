@@ -1,6 +1,6 @@
 import { apiClient } from '../../../services/apiClient';
 import { demoTrips } from '../data/demoTrips';
-import type { CreateTripInput, Trip, TripStop, TripStopInput, UpdateTripInput } from '../types';
+import type { CreateTripInput, Trip, TripSearchFilters, TripStop, TripStopInput, UpdateTripInput } from '../types';
 
 const demoMode = import.meta.env.VITE_DEMO_MODE !== 'false';
 let demoStore = [...demoTrips];
@@ -29,10 +29,16 @@ interface BackendTrip {
   endDate: string;
   status: Trip['status'];
   visibility: Trip['visibility'];
+  publicSlug?: string | null;
   currentUserRole?: Trip['currentUserRole'];
   memberCount: number;
   photoCount?: number;
   stops?: BackendStop[];
+  durationDays?: number;
+  averageRating?: number | null;
+  dominantTrait?: Trip['dominantTrait'];
+  totalSpent?: number;
+  currency?: string;
 }
 
 const wait = (milliseconds: number) =>
@@ -63,15 +69,68 @@ function mapBackendTrip(trip: BackendTrip): Trip {
   return {
     ...trip,
     description: trip.description ?? 'A journey waiting to be filled with stories.',
+    publicSlug: trip.publicSlug ?? null,
     currentUserRole: trip.currentUserRole ?? 'VIEWER',
     accent: ['terracotta', 'indigo', 'aqua', 'sage'][trip.city.length % 4],
     photos: trip.photoCount ?? 0,
-    spent: 0,
-    currency: 'EUR',
+    spent: trip.totalSpent ?? 0,
+    currency: trip.currency ?? 'EUR',
     stops: (trip.stops ?? [])
       .sort((left, right) => left.position - right.position)
       .map((stop) => mapBackendStop(stop, trip.startDate)),
+    durationDays: trip.durationDays,
+    averageRating: trip.averageRating ?? undefined,
+    dominantTrait: trip.dominantTrait,
   };
+}
+
+function searchParams(filters: TripSearchFilters) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== '' && value !== 'ALL') params.set(key, String(value));
+  });
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+function demoMatches(trip: Trip, filters: TripSearchFilters) {
+  const query = filters.q?.trim().toLowerCase();
+  const duration = trip.durationDays ?? Math.floor(
+    (new Date(`${trip.endDate}T00:00:00Z`).getTime() - new Date(`${trip.startDate}T00:00:00Z`).getTime()) / 86_400_000,
+  ) + 1;
+  const yearMatches = filters.year === undefined
+    || Number(trip.startDate.slice(0, 4)) <= filters.year && Number(trip.endDate.slice(0, 4)) >= filters.year;
+  const searchable = `${trip.title} ${trip.country} ${trip.city} ${trip.startDate.slice(0, 4)} ${trip.endDate.slice(0, 4)} ${trip.stops.map(({ name }) => name).join(' ')}`.toLowerCase();
+  return (!query || searchable.includes(query))
+    && (!filters.status || trip.status === filters.status)
+    && yearMatches
+    && (!filters.country || trip.country.toLowerCase().includes(filters.country.toLowerCase()))
+    && (!filters.city || trip.city.toLowerCase().includes(filters.city.toLowerCase()))
+    && (filters.minRating === undefined || (trip.averageRating ?? 0) >= filters.minRating)
+    && (filters.minPrice === undefined || trip.spent >= filters.minPrice)
+    && (filters.maxPrice === undefined || trip.spent <= filters.maxPrice)
+    && (filters.minDuration === undefined || duration >= filters.minDuration)
+    && (filters.maxDuration === undefined || duration <= filters.maxDuration)
+    && (!filters.dna || trip.dominantTrait === filters.dna)
+    && (!filters.relationship || filters.relationship === 'ALL'
+      || filters.relationship === 'OWNER' && trip.currentUserRole === 'OWNER'
+      || filters.relationship === 'SHARED' && trip.currentUserRole !== 'OWNER');
+}
+
+function sortDemoTrips(trips: Trip[], filters: TripSearchFilters) {
+  const duration = (trip: Trip) => trip.durationDays ?? Math.floor(
+    (new Date(`${trip.endDate}T00:00:00Z`).getTime() - new Date(`${trip.startDate}T00:00:00Z`).getTime()) / 86_400_000,
+  ) + 1;
+  return trips.sort((left, right) => {
+    switch (filters.sort) {
+      case 'START_ASC': return left.startDate.localeCompare(right.startDate);
+      case 'TITLE_ASC': return left.title.localeCompare(right.title);
+      case 'RATING_DESC': return (right.averageRating ?? -1) - (left.averageRating ?? -1);
+      case 'PRICE_DESC': return right.spent - left.spent;
+      case 'DURATION_DESC': return duration(right) - duration(left);
+      default: return right.startDate.localeCompare(left.startDate);
+    }
+  });
 }
 
 function requireDemoTrip(tripId: string) {
@@ -108,6 +167,15 @@ export const tripsApi = {
     return [...demoStore];
   },
 
+  async search(filters: TripSearchFilters): Promise<Trip[]> {
+    if (!demoMode) {
+      const trips = await apiClient<BackendTrip[]>(`/trips/search${searchParams(filters)}`);
+      return trips.map(mapBackendTrip);
+    }
+    await wait(180);
+    return sortDemoTrips(demoStore.filter((trip) => demoMatches(trip, filters)), filters);
+  },
+
   async getById(tripId: string): Promise<Trip> {
     if (!demoMode) return mapBackendTrip(await apiClient<BackendTrip>(`/trips/${tripId}`));
     await wait(120);
@@ -130,6 +198,7 @@ export const tripsApi = {
       description: 'A new journey waiting to be filled with stories.',
       countryCode: input.country.slice(0, 2).toUpperCase(),
       status: new Date(input.startDate) > new Date() ? 'UPCOMING' : 'ACTIVE',
+      publicSlug: input.visibility === 'PUBLIC' ? crypto.randomUUID().replaceAll('-', '') : null,
       currentUserRole: 'OWNER',
       accent: 'sage',
       photos: 0,
@@ -156,6 +225,9 @@ export const tripsApi = {
       ...current,
       ...input,
       countryCode: input.countryCode || input.country.slice(0, 2).toUpperCase(),
+      publicSlug: input.visibility === 'PUBLIC'
+        ? current.publicSlug ?? crypto.randomUUID().replaceAll('-', '')
+        : null,
       status: new Date(input.startDate) > new Date()
         ? 'UPCOMING'
         : new Date(input.endDate) < new Date() ? 'COMPLETED' : 'ACTIVE',

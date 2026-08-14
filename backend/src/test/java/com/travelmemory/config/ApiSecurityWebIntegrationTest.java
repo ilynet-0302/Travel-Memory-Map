@@ -12,6 +12,7 @@ import com.travelmemory.trip.dto.TripDetailsResponse;
 import com.travelmemory.trip.entity.TripStatus;
 import com.travelmemory.trip.entity.TripVisibility;
 import com.travelmemory.trip.service.TripService;
+import com.travelmemory.trip.service.TripSearchService;
 import com.travelmemory.trip.service.TripStopService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,6 +54,9 @@ class ApiSecurityWebIntegrationTest {
     private TripService tripService;
 
     @MockitoBean
+    private TripSearchService tripSearchService;
+
+    @MockitoBean
     private TripStopService tripStopService;
 
     @MockitoBean
@@ -69,6 +74,25 @@ class ApiSecurityWebIntegrationTest {
                 .andExpect(status().isUnauthorized());
 
         verify(tripService, never()).listTrips();
+    }
+
+    @Test
+    void authenticatedTripSearchBindsAdvancedFilters() throws Exception {
+        mockMvc.perform(get("/api/v1/trips/search")
+                        .with(jwt())
+                        .param("q", "gallery")
+                        .param("year", "2026")
+                        .param("minRating", "8")
+                        .param("relationship", "SHARED")
+                        .param("sort", "RATING_DESC"))
+                .andExpect(status().isOk());
+
+        verify(tripSearchService).search(argThat(criteria ->
+                criteria.q().equals("gallery")
+                        && criteria.year() == 2026
+                        && criteria.minRating().intValue() == 8
+                        && criteria.relationship() == com.travelmemory.trip.dto.TripRelationship.SHARED
+                        && criteria.sort() == com.travelmemory.trip.dto.TripSearchSort.RATING_DESC));
     }
 
     @Test
@@ -113,6 +137,7 @@ class ApiSecurityWebIntegrationTest {
                 LocalDate.of(2026, 9, 18),
                 TripStatus.UPCOMING,
                 TripVisibility.PRIVATE,
+                null,
                 null,
                 TripRole.OWNER,
                 1,

@@ -19,5 +19,6 @@ public record PhotoResponse(
         BigDecimal latitude,
         BigDecimal longitude,
         String caption,
+        boolean publicVisible,
         OffsetDateTime createdAt) {
 }

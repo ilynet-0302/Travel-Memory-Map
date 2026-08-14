@@ -8,9 +8,12 @@ import com.travelmemory.trip.dto.CreateTripStopRequest;
 import com.travelmemory.trip.dto.TripDetailsResponse;
 import com.travelmemory.trip.dto.TripStopResponse;
 import com.travelmemory.trip.dto.TripSummaryResponse;
+import com.travelmemory.trip.dto.TripSearchCriteria;
+import com.travelmemory.trip.dto.TripSearchResultResponse;
 import com.travelmemory.trip.dto.UpdateTripRequest;
 import com.travelmemory.trip.dto.UpdateTripStopRequest;
 import com.travelmemory.trip.service.TripService;
+import com.travelmemory.trip.service.TripSearchService;
 import com.travelmemory.trip.service.TripStopService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,14 +37,17 @@ import java.util.UUID;
 public class TripController {
 
     private final TripService tripService;
+    private final TripSearchService tripSearchService;
     private final TripStopService tripStopService;
     private final TripMemberService tripMemberService;
 
     public TripController(
             TripService tripService,
+            TripSearchService tripSearchService,
             TripStopService tripStopService,
             TripMemberService tripMemberService) {
         this.tripService = tripService;
+        this.tripSearchService = tripSearchService;
         this.tripStopService = tripStopService;
         this.tripMemberService = tripMemberService;
     }
@@ -54,6 +61,11 @@ public class TripController {
     @GetMapping
     public List<TripSummaryResponse> listTrips() {
         return tripService.listTrips();
+    }
+
+    @GetMapping("/search")
+    public List<TripSearchResultResponse> searchTrips(@Valid @ModelAttribute TripSearchCriteria criteria) {
+        return tripSearchService.search(criteria);
     }
 
     @GetMapping("/{tripId}")

@@ -21,6 +21,7 @@ public record TripDetailsResponse(
         TripStatus status,
         TripVisibility visibility,
         String coverImageUrl,
+        String publicSlug,
         TripRole currentUserRole,
         long memberCount,
         long photoCount,

@@ -6,7 +6,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+
+import com.travelmemory.trip.entity.TripStatus;
+import com.travelmemory.trip.entity.TripVisibility;
 
 public interface TripRepository extends JpaRepository<Trip, UUID> {
 
@@ -25,4 +29,9 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
             order by trip.startDate desc
             """)
     List<Trip> findAccessibleTrips(@Param("userId") UUID userId);
+
+    Optional<Trip> findByPublicSlugAndVisibilityAndStatusNot(
+            String publicSlug,
+            TripVisibility visibility,
+            TripStatus excludedStatus);
 }

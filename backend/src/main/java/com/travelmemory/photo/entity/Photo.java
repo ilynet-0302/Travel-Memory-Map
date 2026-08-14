@@ -59,6 +59,9 @@ public class Photo {
     @Column(length = 1000)
     private String caption;
 
+    @Column(name = "public_visible", nullable = false)
+    private boolean publicVisible;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -90,6 +93,7 @@ public class Photo {
         this.latitude = latitude;
         this.longitude = longitude;
         this.caption = normalizeCaption(caption);
+        this.publicVisible = false;
         this.createdAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
@@ -109,5 +113,7 @@ public class Photo {
     public BigDecimal getLatitude() { return latitude; }
     public BigDecimal getLongitude() { return longitude; }
     public String getCaption() { return caption; }
+    public boolean isPublicVisible() { return publicVisible; }
+    public void setPublicVisible(boolean publicVisible) { this.publicVisible = publicVisible; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
 }

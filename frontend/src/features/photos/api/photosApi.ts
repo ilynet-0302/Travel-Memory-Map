@@ -39,6 +39,7 @@ export const photosApi = {
       latitude: null,
       longitude: null,
       caption: input.caption?.trim() || null,
+      publicVisible: false,
       createdAt: new Date().toISOString(),
     };
     demoPhotos.set(tripId, [photo, ...(demoPhotos.get(tripId) ?? [])]);
@@ -52,5 +53,21 @@ export const photosApi = {
     }
     await wait(160);
     demoPhotos.set(tripId, (demoPhotos.get(tripId) ?? []).filter(({ id }) => id !== photoId));
+  },
+
+  async setPublicVisibility(tripId: string, photoId: string, publicVisible: boolean): Promise<TripPhoto> {
+    if (!demoMode) {
+      return apiClient<TripPhoto>(`/trips/${tripId}/photos/${photoId}/public-visibility`, {
+        method: 'PATCH',
+        body: JSON.stringify({ publicVisible }),
+      });
+    }
+    await wait(120);
+    const photos = demoPhotos.get(tripId) ?? [];
+    const photo = photos.find(({ id }) => id === photoId);
+    if (!photo) throw new Error('We could not find that photo.');
+    const updated = { ...photo, publicVisible };
+    demoPhotos.set(tripId, photos.map((current) => current.id === photoId ? updated : current));
+    return updated;
   },
 };
