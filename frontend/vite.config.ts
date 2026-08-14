@@ -12,6 +12,8 @@ function originOf(value: string | undefined) {
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+  const mapStyleUrl = env.VITE_MAP_STYLE_URL?.trim()
+    || 'https://tiles.openfreemap.org/styles/liberty';
   if (command === 'build') {
     const required = ['VITE_API_BASE_URL', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_PUBLISHABLE_KEY'];
     const missing = required.filter((name) => !env[name]?.trim());
@@ -28,7 +30,7 @@ export default defineConfig(({ command, mode }) => {
       const dynamicOrigins = [
         originOf(env.VITE_API_BASE_URL),
         originOf(env.VITE_SUPABASE_URL),
-        originOf(env.VITE_MAP_STYLE_URL),
+        originOf(mapStyleUrl),
       ].filter((value): value is string => Boolean(value));
       const connectSources = ["'self'", ...dynamicOrigins, 'https://raw.githubusercontent.com'];
       const imageSources = ["'self'", 'data:', 'blob:', ...dynamicOrigins];
