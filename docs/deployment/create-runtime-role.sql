@@ -8,8 +8,9 @@ CREATE ROLE travel_memory_app
     NOSUPERUSER
     NOCREATEDB
     NOCREATEROLE
+    NOINHERIT
     NOREPLICATION
-    BYPASSRLS;
+    NOBYPASSRLS;
 
 GRANT CONNECT ON DATABASE postgres TO travel_memory_app;
 GRANT USAGE ON SCHEMA public TO travel_memory_app;
@@ -27,11 +28,27 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
     trip_ratings
 TO travel_memory_app;
 
--- UUIDs currently avoid application sequences, but these grants keep future
--- identity columns usable without granting schema ownership or DDL privileges.
-GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO travel_memory_app;
-
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
-    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO travel_memory_app;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
-    GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO travel_memory_app;
+-- The Spring API performs authorization before database access. These policies
+-- let only its restricted runtime role reach application rows; browser-facing
+-- anon/authenticated roles remain blocked by V12. Policies and grants for any
+-- future table must be added explicitly instead of being inherited by default.
+CREATE POLICY travel_memory_backend_access ON profiles
+    FOR ALL TO travel_memory_app USING (true) WITH CHECK (true);
+CREATE POLICY travel_memory_backend_access ON trips
+    FOR ALL TO travel_memory_app USING (true) WITH CHECK (true);
+CREATE POLICY travel_memory_backend_access ON trip_members
+    FOR ALL TO travel_memory_app USING (true) WITH CHECK (true);
+CREATE POLICY travel_memory_backend_access ON trip_days
+    FOR ALL TO travel_memory_app USING (true) WITH CHECK (true);
+CREATE POLICY travel_memory_backend_access ON trip_stops
+    FOR ALL TO travel_memory_app USING (true) WITH CHECK (true);
+CREATE POLICY travel_memory_backend_access ON trip_invites
+    FOR ALL TO travel_memory_app USING (true) WITH CHECK (true);
+CREATE POLICY travel_memory_backend_access ON photos
+    FOR ALL TO travel_memory_app USING (true) WITH CHECK (true);
+CREATE POLICY travel_memory_backend_access ON expenses
+    FOR ALL TO travel_memory_app USING (true) WITH CHECK (true);
+CREATE POLICY travel_memory_backend_access ON expense_participants
+    FOR ALL TO travel_memory_app USING (true) WITH CHECK (true);
+CREATE POLICY travel_memory_backend_access ON trip_ratings
+    FOR ALL TO travel_memory_app USING (true) WITH CHECK (true);

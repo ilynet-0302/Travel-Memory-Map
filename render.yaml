@@ -15,6 +15,10 @@ services:
         sync: false
       - key: DATABASE_PASSWORD
         sync: false
+      - key: DATABASE_MAX_POOL_SIZE
+        value: "5"
+      - key: DATABASE_MIN_IDLE
+        value: "1"
       - key: SUPABASE_AUTH_ISSUER
         sync: false
       - key: SUPABASE_JWKS_URI

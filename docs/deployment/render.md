@@ -24,6 +24,8 @@ Use the values from the local `.env`, with these production differences:
 - `DATABASE_URL` should use the shared session pooler on port `5432` and include `sslmode=require`;
 - `DATABASE_USERNAME` is `travel_memory_app.PROJECT_REF` when the Supavisor pooler is used;
 - `DATABASE_PASSWORD` is the runtime-role password from step 5, not the Supabase `postgres` password;
+- keep `DATABASE_MAX_POOL_SIZE=5` and `DATABASE_MIN_IDLE=1` so the application stays within the
+  shared pooler's connection limit, including during a rolling redeploy;
 - `SPRING_FLYWAY_ENABLED=false` keeps migration/admin privileges out of the running web service;
 - keep Supabase Data API disabled;
 - keep `SUPABASE_AUTH_AUDIENCE=authenticated`;
@@ -43,6 +45,8 @@ After Render assigns the `https://...onrender.com` address, configure these GitH
 
 Then set `CORS_ALLOWED_ORIGINS` in Render to the exact GitHub Pages origin and redeploy the backend.
 Finally, add the GitHub Pages URL to the allowed redirect URLs in Supabase Auth.
+Until all four GitHub variables are present, the Pages workflow is intentionally skipped; run it manually after
+the Render URL is available.
 
 For future schema changes, apply the Flyway migration from a trusted local machine using the database
 administrator account before deploying the corresponding backend version. Render's pre-deploy command is
