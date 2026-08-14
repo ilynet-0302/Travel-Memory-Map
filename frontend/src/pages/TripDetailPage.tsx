@@ -6,7 +6,6 @@ import {
   Check,
   ChevronRight,
   CircleDollarSign,
-  Compass,
   Copy,
   Clock3,
   ExternalLink,
@@ -350,14 +349,8 @@ export function TripDetailPage() {
         <PhotosPanel trip={trip} stops={trip.stops} />
       ) : activeTab === 'Expenses' ? (
         <ExpensesPanel trip={trip} />
-      ) : activeTab === 'Members' ? (
-        <TripMembersPanel tripId={trip.id} currentUserRole={trip.currentUserRole} />
       ) : (
-        <section className="tab-placeholder">
-          <span><Compass size={26} /></span>
-          <h2>{activeTab} are coming next</h2>
-          <p>This first slice focuses on the journey map, timeline and replay. {activeTab} will connect to the same secure trip permissions.</p>
-        </section>
+        <TripMembersPanel tripId={trip.id} currentUserRole={trip.currentUserRole} />
       )}
 
       <EditTripDialog open={editTripOpen} trip={trip} onClose={() => setEditTripOpen(false)} />

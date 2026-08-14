@@ -2,11 +2,15 @@
 
 Travel Memory Map is a collaborative travel journal that turns a trip into an interactive story: route, timeline, memories, expenses and a replay on the map.
 
-This repository is being built as a production-shaped portfolio project. It separates frontend experience from authoritative backend permissions and keeps private collaboration distinct from public sharing.
+It is a production-shaped portfolio project that separates the frontend experience from authoritative backend permissions and keeps private collaboration distinct from public sharing.
 
-## Current product slice
+## Preview
 
-The trip, collaboration and photo vertical slices are implemented:
+![Travel Memory Map preview](frontend/public/og.png)
+
+The repository includes automated GitHub Pages and Render deployment configuration. The live URL will be added after the first production deployment.
+
+## Features
 
 - responsive dashboard with realistic travel summaries;
 - authenticated server-side search across trips, countries, cities, places and years;
@@ -25,13 +29,19 @@ The trip, collaboration and photo vertical slices are implemented:
 - private Supabase Storage photo gallery with upload, signed previews and deletion;
 - JPEG/PNG/WebP validation, 10 MB limits, EXIF time/GPS extraction and stop association;
 - photo counts in trips and backend-derived profile statistics;
-- Spring Boot API for trips, search, stops, members, invitations, photos, expenses and public sharing;
+- shared expenses with participant splits, category/currency summaries and deterministic settlements;
+- multi-category trip ratings, return intent and aggregate rating summaries;
+- deterministic Trip DNA, travel personality, statistics and trip comparison;
+- memory gallery, On This Day memories and an interactive world scratch map;
+- curated public trip pages with explicitly selected public photos;
+- Spring Boot API for trips, search, stops, members, invitations, photos, expenses, ratings, replay and public sharing;
 - Supabase JWT verification through Spring Security Resource Server;
 - centralized OWNER / EDITOR / VIEWER permission checks;
 - PostgreSQL schema managed by Flyway;
-- invitation, permission, search, profile, photo, statistics and HTTP security tests plus Docker-aware Testcontainers integration tests.
+- rate limiting, strict CORS, security headers and Data API defense in depth;
+- service, controller, permission and HTTP security tests plus Docker-aware Testcontainers integration tests.
 
-The UI starts in demo mode so it is immediately explorable before Supabase credentials and the API are configured. Demo mode supports the same trip and stop lifecycle as the current backend slice.
+The UI can run in an optional local demo mode before Supabase credentials and the API are configured. Production builds explicitly require `VITE_DEMO_MODE=false`.
 
 ## What makes it different
 
@@ -67,9 +77,31 @@ The frontend never sends a `userId` as proof of identity. The backend obtains th
 
 More detail is available in [architecture.md](docs/architecture/architecture.md), [database-schema.md](docs/database/database-schema.md), [authentication-flow.md](docs/architecture/authentication-flow.md), [trip-invitation-flow.md](docs/architecture/trip-invitation-flow.md), and the [Supabase setup guide](docs/supabase-setup.md).
 
+## Security model
+
+- Supabase authenticates users; Spring validates issuer, audience, signature and algorithm for every protected API request.
+- The backend derives identity from the JWT `sub` claim and never trusts a client-supplied user ID.
+- OWNER / EDITOR / VIEWER checks are enforced in services before protected data is accessed.
+- Invitation tokens are random, short-lived and stored only as SHA-256 hashes.
+- Private photos remain in a private bucket and use short-lived signed URLs subject to Storage RLS.
+- Application tables are not exposed through the Supabase Data API, and production uses a restricted database role.
+- CORS uses exact HTTPS origins; public and write-heavy endpoints have bounded request rates.
+
+## API overview
+
+All endpoints use the `/api/v1` prefix. The main groups are:
+
+- `/trips`, `/trips/{tripId}/stops` — trip and itinerary lifecycle;
+- `/trips/{tripId}/members`, `/invites` — collaboration and secure invitations;
+- `/trips/{tripId}/photos`, `/expenses`, `/rating`, `/replay` — memories and trip intelligence;
+- `/profile`, `/profile/memories`, `/profile/on-this-day`, `/profile/world-map` — traveller views;
+- `/public/trips/{publicSlug}` — deliberately curated anonymous sharing.
+
+Request and response models live next to their feature controllers, and errors use a stable JSON error contract.
+
 ## Technology stack
 
-Frontend: React 19, TypeScript, Vite, React Router, TanStack Query, React Hook Form, Zod, MapLibre GL JS and CSS Modules-style feature organization.
+Frontend: React 19, TypeScript, Vite, React Router, TanStack Query, React Hook Form, Zod, MapLibre GL JS and feature-oriented styling.
 
 Backend: Java 21, Spring Boot 4.1, Spring Web MVC, Spring Data JPA, Spring Security, Bean Validation, Flyway, MapStruct, JUnit, Mockito and Testcontainers.
 
@@ -87,18 +119,21 @@ For the complete authenticated stack, follow [docs/supabase-setup.md](docs/supab
 
 ```text
 frontend: npm run lint && npm test && npm run build
-backend:  mvnw.cmd test
+backend:  mvnw.cmd verify
 ```
 
 The PostgreSQL repository test runs with Testcontainers when Docker is available and is skipped cleanly otherwise.
 
-## Deployment
+## Deployment and environment
 
-The frontend workflow builds Vite and publishes the output to GitHub Pages. The backend is packaged as a standalone Spring Boot service and expects a PostgreSQL/Supabase database plus the Supabase JWKS URL.
+The frontend workflow builds Vite and publishes the output to GitHub Pages. The backend is packaged as a non-root Docker container and deployed to Render, while Supabase provides PostgreSQL, Auth and private Storage.
 
-## Roadmap
+Environment templates contain placeholders only: [backend variables](.env.example) and [frontend variables](frontend/.env.example). Production setup is documented in [the Render deployment guide](docs/deployment/render.md).
 
-- Phase 2: complete â€” members, secure invitations, expiry/revocation/use limits and role management.
-- Phase 3: photos, EXIF metadata and private Supabase Storage complete; shared expenses remain.
-- Phase 4: complete Trip Replay with synchronized photos and route animation.
-- Phase 5–6: Travel DNA, statistics, world map, public trips, search and On This Day.
+## Future improvements
+
+- browser-level end-to-end tests for the complete sign-up, invitation and sharing flows;
+- optional self-hosted routing instead of the public OSRM demonstration service;
+- exchange-rate snapshots for cross-currency settlement totals;
+- email delivery for invitation links and activity notifications;
+- production observability and alerting after the first public deployment.
