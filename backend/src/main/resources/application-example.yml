@@ -10,7 +10,12 @@ spring:
           issuer-uri: https://your-project.supabase.co/auth/v1
           jwk-set-uri: https://your-project.supabase.co/auth/v1/.well-known/jwks.json
           jws-algorithms: ES256
+          audiences: authenticated
 
 app:
   cors:
-    allowed-origins: http://localhost:5173,https://username.github.io
+    allowed-origins: https://username.github.io
+  supabase:
+    signed-url-ttl-seconds: 900
+  rate-limit:
+    enabled: true

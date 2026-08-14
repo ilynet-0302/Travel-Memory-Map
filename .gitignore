@@ -16,6 +16,7 @@ backend/target/
 backend/.idea/
 backend/*.iml
 backend/*.log
+runtime-logs/
 
 # OS / editors
 .DS_Store

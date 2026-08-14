@@ -22,15 +22,21 @@ public class PhotoStorageService {
     private final String supabaseUrl;
     private final String publishableKey;
     private final String bucket;
+    private final int signedUrlTtlSeconds;
 
     public PhotoStorageService(
             @Value("${app.supabase.url}") String supabaseUrl,
             @Value("${app.supabase.publishable-key}") String publishableKey,
-            @Value("${app.supabase.photo-bucket}") String bucket) {
+            @Value("${app.supabase.photo-bucket}") String bucket,
+            @Value("${app.supabase.signed-url-ttl-seconds}") int signedUrlTtlSeconds) {
+        if (signedUrlTtlSeconds < 60 || signedUrlTtlSeconds > 3600) {
+            throw new IllegalArgumentException("Signed photo URL TTL must be between 60 and 3600 seconds.");
+        }
         this.restClient = RestClient.create();
         this.supabaseUrl = supabaseUrl.replaceAll("/+$", "");
         this.publishableKey = publishableKey;
         this.bucket = bucket;
+        this.signedUrlTtlSeconds = signedUrlTtlSeconds;
     }
 
     public String bucket() {
@@ -61,7 +67,7 @@ public class PhotoStorageService {
                     .header("apikey", publishableKey)
                     .headers(headers -> headers.setBearerAuth(accessToken))
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("expiresIn", 3600))
+                    .body(Map.of("expiresIn", signedUrlTtlSeconds))
                     .retrieve()
                     .body(SignedUrlPayload.class);
             if (payload == null || payload.signedURL() == null) {
