@@ -1,4 +1,5 @@
-import maplibregl, { type GeoJSONSource, type Map as MapLibreMap, type Marker } from 'maplibre-gl';
+import type { GeoJSONSource, Map as MapLibreMap, Marker } from 'maplibre-gl';
+import { maplibregl } from '../maplibre';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   clampReplayProgress,

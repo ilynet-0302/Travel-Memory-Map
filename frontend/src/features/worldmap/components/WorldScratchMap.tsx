@@ -1,4 +1,5 @@
-import maplibregl, { type Map as MapLibreMap, type MapMouseEvent } from 'maplibre-gl';
+import type { Map as MapLibreMap, MapMouseEvent } from 'maplibre-gl';
+import { maplibregl } from '../../map/maplibre';
 import { useEffect, useRef, useState } from 'react';
 import type { WorldMapCountry } from '../types';
 
